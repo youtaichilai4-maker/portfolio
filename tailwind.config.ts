@@ -8,6 +8,9 @@ const config: Config = {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                mono: ["var(--font-jetbrains-mono)", "Courier New", "monospace"],
+            },
             colors: {
                 "neon-cyan": "#06b6d4",
                 "neon-purple": "#8b5cf6",
@@ -22,6 +25,8 @@ const config: Config = {
             animation: {
                 "glow": "glow 2s ease-in-out infinite alternate",
                 "float": "float 6s ease-in-out infinite",
+                "grid-pulse": "grid-pulse 4s ease-in-out infinite",
+                "mesh-move": "mesh-move 20s ease-in-out infinite",
             },
             keyframes: {
                 glow: {
@@ -32,10 +37,29 @@ const config: Config = {
                     "0%, 100%": { transform: "translateY(0px)" },
                     "50%": { transform: "translateY(-20px)" },
                 },
+                "grid-pulse": {
+                    "0%, 100%": { opacity: "0.3" },
+                    "50%": { opacity: "0.6" },
+                },
+                "mesh-move": {
+                    "0%, 100%": {
+                        transform: "translate(0, 0) scale(1)",
+                        opacity: "1",
+                    },
+                    "33%": {
+                        transform: "translate(2%, 2%) scale(1.05)",
+                        opacity: "0.8",
+                    },
+                    "66%": {
+                        transform: "translate(-2%, -2%) scale(0.95)",
+                        opacity: "0.9",
+                    },
+                },
             },
         },
     },
     plugins: [],
 };
 export default config;
+
 
