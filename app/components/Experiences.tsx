@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { useRef, useState } from "react";
 import { EXPERIENCES } from "../data";
 
@@ -71,9 +71,8 @@ export default function Experiences() {
                                 <motion.div
                                     className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                                     style={{
-                                        background: `linear-gradient(${
-                                            index % 2 === 0 ? "135deg" : "45deg"
-                                        }, transparent, rgba(6, 182, 212, 0.1), transparent)`,
+                                        background: `linear-gradient(${index % 2 === 0 ? "135deg" : "45deg"
+                                            }, transparent, rgba(6, 182, 212, 0.1), transparent)`,
                                         backgroundSize: "200% 200%",
                                     }}
                                     animate={{
@@ -137,6 +136,19 @@ export default function Experiences() {
                                             </motion.span>
                                         ))}
                                     </div>
+
+                                    {exp.link && (
+                                        <motion.a
+                                            href={exp.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            whileHover={{ scale: 1.02, x: 4 }}
+                                            className="mt-4 inline-flex items-center gap-2 text-neon-cyan underline underline-offset-4 decoration-neon-cyan/50 hover:decoration-neon-cyan"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                            <span>{exp.linkLabel ?? "サイトを見る"}</span>
+                                        </motion.a>
+                                    )}
                                 </div>
 
                                 {/* 展開される詳細部分 */}
@@ -173,14 +185,14 @@ export default function Experiences() {
                                                             <motion.div
                                                                 className="absolute inset-0 bg-gradient-to-r from-transparent via-neon-cyan/5 to-transparent"
                                                                 animate={{
-                                                    x: ["-100%", "200%"],
-                                                }}
+                                                                    x: ["-100%", "200%"],
+                                                                }}
                                                                 transition={{
-                                                    duration: 2,
-                                                    repeat: Infinity,
-                                                    repeatDelay: 3,
-                                                    ease: "easeInOut",
-                                                }}
+                                                                    duration: 2,
+                                                                    repeat: Infinity,
+                                                                    repeatDelay: 3,
+                                                                    ease: "easeInOut",
+                                                                }}
                                                             />
                                                             <p className="text-sm text-neon-cyan font-semibold mb-3 relative z-10">
                                                                 主な成果
@@ -217,13 +229,10 @@ export default function Experiences() {
 
                                 {/* Corner accent */}
                                 <div
-                                    className={`absolute ${
-                                        index % 2 === 0 ? "top-0 left-0" : "top-0 right-0"
-                                    } w-12 h-12 border-t-2 ${
-                                        index % 2 === 0 ? "border-l-2 border-neon-cyan/30" : "border-r-2 border-neon-purple/30"
-                                    } opacity-50 ${
-                                        index % 2 === 0 ? "rounded-tl-2xl" : "rounded-tr-2xl"
-                                    }`}
+                                    className={`absolute ${index % 2 === 0 ? "top-0 left-0" : "top-0 right-0"
+                                        } w-12 h-12 border-t-2 ${index % 2 === 0 ? "border-l-2 border-neon-cyan/30" : "border-r-2 border-neon-purple/30"
+                                        } opacity-50 ${index % 2 === 0 ? "rounded-tl-2xl" : "rounded-tr-2xl"
+                                        }`}
                                 />
                             </motion.div>
                         );

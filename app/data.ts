@@ -55,6 +55,8 @@ export const EXPERIENCES = [
         desc: "論文要約・専門用語/英単語抽出・翻訳・保存をワンストップで行うブラウザ拡張兼Webアプリ。Render上のFastAPIバックエンドとNext.jsフロントで提供し、研究の下調べを数分に短縮。",
         tech: ["Next.js/TypeScript", "FastAPI", "spaCy + Gemini", "Supabase", "Render"],
         details: "論文読みのペインを解消するためにPaperLensへリブランディング。spaCyで全文を約0.5秒でスキャンし重要語句を抽出、Gemini 1.5 Flashで要約と厳選、選択テキストを即座に翻訳・解説。抽出した専門用語・英単語・要約はSupabaseに保存し、Render上のFastAPIで提供。BYOKモデルでAPIキーはブラウザ内にのみ保持。紹介サイト: https://paper-lens-intro.vercel.app/",
+        link: "https://paper-lens-intro.vercel.app/",
+        linkLabel: "PaperLens 紹介サイト（画面イメージはこちら）",
         achievements: [
             "専門用語・英単語抽出/要約/翻訳/保存をブラウザサイドバーで一貫提供し、読解時間を大幅短縮",
             "spaCy×Geminiのハイブリッドで精度と速度を両立（全文0.5秒スキャンを確認）",
