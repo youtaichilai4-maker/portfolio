@@ -27,6 +27,24 @@ export const SKILLS = [
 export const EXPERIENCES = [
     {
         type: "Research",
+        title: "LTEM計測の自動化・高精度化に向けた、シミュレーションベース物性推定AI基盤の構築",
+        desc: "シミュレーション生成データを活用し、LTEMラインプロファイルから物性を高速・自動推定する基盤を構築。属人化していたパラメータ調整を排除し、研究者が発見に集中できる環境を目指す。",
+        tech: ["Python", "PyTorch", "Simulation", "LTEM", "MLOps"],
+        details: "Vision & Impact: LTEM解析の属人性と時間コストを削減し、半導体・新素材開発の標準化を加速。System Architecture: Simulation→前処理→学習→推論を一貫設計し、.npzで再現性を担保。Pipeline Design: 特徴量エンジニアリングと学習を分離し、差分実行で高速検証。Implementation: 1D軽量ヘッドで τ / W / E を回帰/分類、エッジ・リアルタイムを想定。Experiment Management: 検証セット分離、チェックポイント運用、感度可視化スクリプトでデータ品質とモデル挙動を定量管理。Quantitative: 最新検証セットで R^2 は 0.9 台（MAE継続評価）。Future: アクティブサンプリングと3D全自動マッピングをロードマップ化。",
+        images: [
+            {
+                src: "/research/test_sample_009.png",
+                alt: "LTEMラインプロファイルに基づく物性推定結果サンプル"
+            }
+        ],
+        achievements: [
+            "Simulation→前処理→学習→推論を再現性あるワンパスで自動化し、手作業を排除",
+            "特徴量とハイパラを分離した設計で探索コストを削減し、高速な差分検証を実現",
+            "検証セット分離と感度可視化により R^2 0.9 台を達成、将来は3D自動マッピングとアクティブサンプリングへ拡張"
+        ]
+    },
+    {
+        type: "Research",
         title: "非破壊検査AIの構築",
         desc: "フェムト秒パルスレーザーとテラヘルツ波を用いた太陽電池の物性検査。物理シミュレーションによる合成データ生成と、Deep Learning(CNN/Transformer)を用いた逆問題解析により、非接触での物性特定モデルを開発中。",
         tech: ["Python", "PyTorch", "Simulation", "Optics"],

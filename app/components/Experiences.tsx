@@ -137,6 +137,34 @@ export default function Experiences() {
                                         ))}
                                     </div>
 
+                                    {exp.images && exp.images.length > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true, margin: "-50px" }}
+                                            transition={{ delay: 0.15, duration: 0.4 }}
+                                            className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
+                                        >
+                                            {exp.images.map((image, imgIdx) => (
+                                                <div
+                                                    key={imgIdx}
+                                                    className="overflow-hidden rounded-xl border border-neon-cyan/20 bg-black/40"
+                                                >
+                                                    <img
+                                                        src={image.src}
+                                                        alt={image.alt ?? `${exp.title} image ${imgIdx + 1}`}
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                    {image.alt && (
+                                                        <div className="px-3 py-2 text-sm text-gray-300 border-t border-neon-cyan/10 bg-black/40">
+                                                            {image.alt}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+
                                     {exp.link && (
                                         <motion.a
                                             href={exp.link}
