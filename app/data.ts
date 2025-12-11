@@ -51,14 +51,14 @@ export const EXPERIENCES = [
     },
     {
         type: "Personal Dev",
-        title: "論文管理・学習プラットフォーム",
-        desc: "自身の研究効率化のために開発。最新論文の翻訳、保存、RAG(検索拡張生成)によるQ&A機能を搭載。Dockerコンテナ化し、GCP Cloud Run上でサーバーレス運用中。",
-        tech: ["Docker", "FastAPI", "Next.js", "RAG"],
-        details: "研究効率化を目的として、論文管理と学習支援のためのプラットフォームを開発。最新論文の自動取得、多言語翻訳、ベクトルデータベースを用いたRAG（Retrieval-Augmented Generation）によるQ&A機能を実装。FastAPIでバックエンドAPIを構築し、Next.jsでフロントエンドを実装。Dockerコンテナ化により、GCP Cloud Run上でサーバーレス運用し、コスト効率的な運用を実現しています。",
+        title: "PaperLens (論文管理・学習ツール)",
+        desc: "論文要約・専門用語/英単語抽出・翻訳・保存をワンストップで行うブラウザ拡張兼Webアプリ。Render上のFastAPIバックエンドとNext.jsフロントで提供し、研究の下調べを数分に短縮。",
+        tech: ["Next.js/TypeScript", "FastAPI", "spaCy + Gemini", "Supabase", "Render"],
+        details: "論文読みのペインを解消するためにPaperLensへリブランディング。spaCyで全文を約0.5秒でスキャンし重要語句を抽出、Gemini 1.5 Flashで要約と厳選、選択テキストを即座に翻訳・解説。抽出した専門用語・英単語・要約はSupabaseに保存し、Render上のFastAPIで提供。BYOKモデルでAPIキーはブラウザ内にのみ保持。紹介サイト: https://paper-lens-intro.vercel.app/",
         achievements: [
-            "RAG機能により、論文内容に関する質問に高精度で回答可能に",
-            "Dockerコンテナ化により、環境依存性の問題を解消",
-            "GCP Cloud Runのサーバーレス運用で、月額コストを最小限に抑制"
+            "専門用語・英単語抽出/要約/翻訳/保存をブラウザサイドバーで一貫提供し、読解時間を大幅短縮",
+            "spaCy×Geminiのハイブリッドで精度と速度を両立（全文0.5秒スキャンを確認）",
+            "Render上のFastAPI＋Supabase構成でBYOKを維持しつつ安定運用"
         ]
     }
 ];
