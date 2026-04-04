@@ -1,6 +1,6 @@
 import About from "./components/About";
 import CustomCursor from "./components/CustomCursor";
-import DataFlowBackground from "./components/DataFlowBackground";
+import ElectromagneticBackground from "./components/ElectromagneticBackground";
 import Experiences from "./components/Experiences";
 import Hero from "./components/Hero";
 import Navigation from "./components/Navigation";
@@ -15,13 +15,13 @@ export default function Home() {
             {/* ノイズテクスチャ */}
             <div className="noise-overlay" />
 
-            {/* 背景のデータフローアニメーション（z-0） */}
-            <DataFlowBackground />
+            {/* Three.js 電磁波背景 */}
+            <ElectromagneticBackground />
 
             {/* カスタムカーソル */}
             <CustomCursor />
 
-            {/* メインコンテンツ（z-10以上でDataFlowBackgroundの上に表示） */}
+            {/* メインコンテンツ（z-10以上で背景の上に表示） */}
             <div className="relative z-10">
                 <Navigation />
                 <Hero />
