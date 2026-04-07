@@ -45,14 +45,15 @@ export const EXPERIENCES = [
     },
     {
         type: "Internship",
-        title: "ITコンサルティング & 技術実装",
-        desc: "ITコンサル系ベンチャーにて、クライアントの業務課題抽出から解決策の提案・実装までを担当。ローコード(Dify/GAS)による迅速なプロトタイピングから、Python/Dockerを用いた堅牢なバックエンド構築まで、コストと安定性を考慮した技術選定をリード。",
-        tech: ["Consulting", "Dify", "Python", "Google Cloud"],
-        details: "複数のクライアントプロジェクトにおいて、要件定義から実装、運用まで一貫して担当。特に、迅速なプロトタイピングと本番環境への移行を両立させる技術選定に注力。ローコードツール（Dify/GAS）で迅速にMVPを構築し、検証後にPython/FastAPIとDockerを用いた堅牢なシステムへ段階的に移行する戦略を提案・実行しました。",
+        title: "Pineal — HR SaaS バックエンド開発 & 社内ツール設計",
+        desc: "HR SaaSプラットフォームのバックエンド開発に加え、HTML → PPTX 自動変換パイプライン「Pineal Slide Studio」を設計・実装。4,200行・26+スライドタイプ対応の社内ツールをゼロから構築し、非エンジニアがHTMLスライドからブランド準拠の編集可能なPPTXを生成できる仕組みを実現。",
+        tech: ["Python", "python-pptx", "Playwright", "FastAPI", "Docker", "Claude Vision API"],
+        details: "■ Pineal Slide Studio（主担当プロジェクト）\nHTML → 編集可能なネイティブPPTX を自動生成するパイプラインを設計・実装。\n\n【アーキテクチャ（4層設計）】\n1. Parser Layer: HTMLスライドをParseSlideデータクラスに変換。CSSクラスとHTMLディレクティブからスライドタイプを自動判定\n2. Dispatcher Layer: スライドタイプに応じて専用Builderにルーティング\n3. Builder Layer: python-pptxでネイティブシェイプを生成（画像貼り付けではなく編集可能な図形）\n4. Verification Layer: テキスト自動検証 + Playwrightスクリーンショット比較による視覚的QA\n\n【設計思想】\n・HTMLスライドを Single Source of Truth とし、PPTXは派生物として扱う\n・Design Tokens（tokens.py）でPineal Red Professionalテーマを一元管理\n・非エンジニアのユーザー体験を最優先に設計\n\n■ VIC Aqua Dashboard（クライアントプロジェクト）\n水位センサーデータの外れ値処理を改善。4手法を合成・実データで比較検証し、局所回帰補間法を提案。RMSE を43.87mm→3.87mmに改善（11倍の精度向上）。既存コードへの変更は1関数のみで、非破壊的に導入。\n\n■ HR SaaS バックエンド\nPythonバックエンド開発、DBクエリ最適化、コードレビューを通じたチーム開発を経験。",
         achievements: [
-            "ローコードツールによる迅速なプロトタイピングで、開発期間を50%短縮",
-            "Python/Dockerベースの本番システムで、99.9%の稼働率を達成",
-            "コストとパフォーマンスのバランスを考慮した技術選定により、運用コストを30%削減"
+            "Slide Studio: 4,200行・26+スライドタイプ対応のHTML→PPTX変換パイプラインをゼロから設計・実装",
+            "Parser→Dispatcher→Builder→Verificationの4層アーキテクチャで保守性と拡張性を両立",
+            "VIC Aqua: 外れ値処理の改善でRMSE 11倍向上（43.87mm→3.87mm）を1関数の変更で実現",
+            "Playwright + Claude Vision APIによる自動視覚QAで、手動検証を排除"
         ]
     },
     {
