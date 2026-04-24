@@ -1,271 +1,455 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { ChevronDown, ExternalLink } from "lucide-react";
-import { useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
 import { EXPERIENCES } from "../data";
+import SplitPane, {
+    BrowserChrome,
+    CodeLine,
+    EmitBand,
+    ParticleDirective,
+} from "./SplitPane";
+import TitleWithEquations from "./TitleWithEquations";
 
-export default function Experiences() {
-    const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-    const sectionRef = useRef<HTMLElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ["start end", "end start"],
+const fileNames: Record<string, string> = {
+    Research: "research/thz-ltem.md",
+    Internship: "intern.md",
+    "Personal Dev": "personal/paperlens.md",
+};
+
+const slugMap: Record<string, string> = {
+    "THz-LTEM 逆問題 — 半導体物性の定量推定": "research/thz-ltem.md",
+    "Pineal — HR SaaS & 社内ツールの自発的立ち上げ": "intern/pineal.md",
+    "KK-Generation — 曖昧な要求を仕様にし、横断で届けた経験": "intern/kk-generation.md",
+    "PaperLens — 自分の課題を起点に世に出した SaaS": "personal/paperlens.md",
+};
+
+// "Signature equation" shown faintly behind each pane's title — thematic
+// tagline for the experience.
+const signatureEq: Record<string, string> = {
+    "THz-LTEM 逆問題 — 半導体物性の定量推定":
+        "∂n/∂t = D∇²n + μE·∇n − n/τ + G",
+    "Pineal — HR SaaS & 社内ツールの自発的立ち上げ":
+        "output = render(source_of_truth)",
+    "KK-Generation — 曖昧な要求を仕様にし、横断で届けた経験":
+        "shape = postprocess(mask) → bbox | line",
+    "PaperLens — 自分の課題を起点に世に出した SaaS":
+        "UX = f(speed, privacy, cost)",
+};
+
+type Exp = (typeof EXPERIENCES)[number];
+
+function buildExperienceLines(exp: Exp): CodeLine[] {
+    const lines: CodeLine[] = [];
+    let n = 1;
+
+    lines.push({ n: n++, render: <span className="text-zinc-500">---</span> });
+    lines.push({
+        n: n++,
+        render: (
+            <>
+                <span className="text-thz-cyan">type</span>
+                <span className="text-zinc-500">: </span>
+                <span className="text-thz-amber">&quot;{exp.type}&quot;</span>
+            </>
+        ),
     });
+    lines.push({
+        n: n++,
+        render: (
+            <>
+                <span className="text-thz-cyan">title</span>
+                <span className="text-zinc-500">: </span>
+                <span className="text-thz-amber">&quot;{exp.title}&quot;</span>
+            </>
+        ),
+    });
+    lines.push({
+        n: n++,
+        render: <ParticleDirective density={0.75} />,
+    });
+    lines.push({ n: n++, render: <span className="text-zinc-500">---</span> });
+    lines.push({ n: n++, render: <EmitBand /> });
+    lines.push({ n: n++, render: null });
 
-    const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+    lines.push({
+        n: n++,
+        render: (
+            <>
+                <span className="text-thz-cyan">## </span>
+                <span className="text-zinc-100">Overview</span>
+            </>
+        ),
+    });
+    lines.push({ n: n++, render: null });
 
-    const toggleExpanded = (index: number) => {
-        setExpandedIndex(expandedIndex === index ? null : index);
+    // Word-aware wrapping so broken lines don't cut mid-word.
+    const wrapText = (text: string, width: number): string[] => {
+        const segments = text.split(/([、。 ]|\s+)/u).filter((s) => s.length > 0);
+        const out: string[] = [];
+        let current = "";
+        for (const seg of segments) {
+            if (current.length + seg.length > width && current.length > 0) {
+                out.push(current.trimEnd());
+                current = seg.trimStart();
+            } else {
+                current += seg;
+            }
+        }
+        if (current.length > 0) out.push(current.trimEnd());
+        return out;
+    };
+    wrapText(exp.desc, 44).forEach((chunk) => {
+        lines.push({
+            n: n++,
+            render: <span className="text-zinc-300">{chunk}</span>,
+        });
+    });
+    lines.push({ n: n++, render: null });
+
+    lines.push({
+        n: n++,
+        render: (
+            <>
+                <span className="text-thz-cyan">## </span>
+                <span className="text-zinc-100">Stack</span>
+            </>
+        ),
+    });
+    exp.tech.forEach((t) => {
+        lines.push({
+            n: n++,
+            render: (
+                <>
+                    <span className="text-thz-cyan">- </span>
+                    <span className="text-zinc-300">{t}</span>
+                </>
+            ),
+        });
+    });
+    lines.push({ n: n++, render: null });
+
+    if (exp.achievements && exp.achievements.length > 0) {
+        lines.push({
+            n: n++,
+            render: (
+                <>
+                    <span className="text-thz-cyan">## </span>
+                    <span className="text-zinc-100">Outcomes</span>
+                </>
+            ),
+        });
+        exp.achievements.forEach((a) => {
+            wrapText(a, 42).forEach((chunk, i) => {
+                lines.push({
+                    n: n++,
+                    render: (
+                        <>
+                            <span className="text-thz-cyan">
+                                {i === 0 ? "- " : "  "}
+                            </span>
+                            <span className="text-zinc-300">{chunk}</span>
+                        </>
+                    ),
+                });
+            });
+        });
+    }
+
+    // Pad a few blank lines at the end — visual "file has room to grow"
+    for (let i = 0; i < 4; i++) {
+        lines.push({ n: n++, render: null });
+    }
+    return lines;
+}
+
+function renderInline(text: string, keyBase: number): JSX.Element[] {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts
+        .filter((p) => p.length > 0)
+        .map((p, i) => {
+            if (p.startsWith("**") && p.endsWith("**")) {
+                return (
+                    <strong
+                        key={`${keyBase}-${i}`}
+                        className="font-semibold text-thz-amber"
+                    >
+                        {p.slice(2, -2)}
+                    </strong>
+                );
+            }
+            return <span key={`${keyBase}-${i}`}>{p}</span>;
+        });
+}
+
+function renderDetails(details: string | undefined) {
+    if (!details) return null;
+    const lines = details.split("\n");
+    const out: JSX.Element[] = [];
+    let key = 0;
+    let listBuf: string[] = [];
+
+    const flushList = () => {
+        if (listBuf.length === 0) return;
+        out.push(
+            <ol
+                key={`list-${key++}`}
+                className="list-decimal pl-6 space-y-1.5 my-2 marker:text-thz-cyan/60 marker:font-mono"
+            >
+                {listBuf.map((item, i) => (
+                    <li
+                        key={i}
+                        className="text-sm text-zinc-300 leading-relaxed pl-1"
+                    >
+                        {renderInline(item, key * 100 + i)}
+                    </li>
+                ))}
+            </ol>
+        );
+        listBuf = [];
     };
 
-    return (
-        <motion.section
-            ref={sectionRef}
-            style={{ opacity }}
-            id="experiences"
-            className="py-20 px-4 relative"
-        >
-            <div className="max-w-4xl mx-auto">
-                <motion.div
-                    initial={{ opacity: 0, y: -30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative mb-12 text-center"
+    for (const raw of lines) {
+        const ln = raw.trimEnd();
+        const numbered = ln.match(/^\s*(\d+)\.\s+(.+)$/);
+        const dashBullet = ln.match(/^\s*-\s+(.+)$/);
+
+        if (ln.trim().startsWith("■")) {
+            flushList();
+            out.push(
+                <h4
+                    key={key++}
+                    className="font-display text-base font-semibold text-thz-cyan mt-4 mb-1 tracking-tight"
                 >
-                    <h2 className="text-4xl md:text-5xl font-bold mb-8 text-glow inline-block">
-                        Experiences
-                    </h2>
-                    {/* Decorative lines */}
-                    <motion.div
-                        initial={{ scaleX: 0 }}
-                        whileInView={{ scaleX: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-neon-purple to-transparent"
-                    />
-                </motion.div>
-
-                <div className="space-y-8">
-                    {EXPERIENCES.map((exp, index) => {
-                        const isExpanded = expandedIndex === index;
-                        return (
-                            <motion.div
-                                key={exp.title}
-                                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50, rotateY: -5 }}
-                                whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
-                                viewport={{ once: true, margin: "-50px" }}
-                                transition={{
-                                    duration: 0.8,
-                                    delay: index * 0.15,
-                                    ease: [0.22, 1, 0.36, 1],
-                                }}
-                                whileHover={{
-                                    scale: 1.01,
-                                    transition: { duration: 0.3 },
-                                }}
-                                className="glass-card rounded-2xl overflow-hidden relative group"
-                            >
-                                {/* Animated border on hover */}
-                                <motion.div
-                                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                                    style={{
-                                        background: `linear-gradient(${index % 2 === 0 ? "135deg" : "45deg"
-                                            }, transparent, rgba(6, 182, 212, 0.1), transparent)`,
-                                        backgroundSize: "200% 200%",
-                                    }}
-                                    animate={{
-                                        backgroundPosition: ["0% 0%", "200% 200%"],
-                                    }}
-                                    transition={{
-                                        duration: 3,
-                                        repeat: Infinity,
-                                        ease: "linear",
-                                    }}
-                                />
-                                {/* クリック可能なヘッダー部分 */}
-                                <div
-                                    onClick={() => toggleExpanded(index)}
-                                    className="p-6 md:p-8 cursor-pointer select-none relative z-10"
-                                >
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <motion.span
-                                            whileHover={{ scale: 1.05 }}
-                                            className="px-4 py-1 rounded-full bg-neon-cyan/20 text-neon-cyan text-sm font-semibold border border-neon-cyan/30 relative overflow-hidden"
-                                        >
-                                            <motion.div
-                                                className="absolute inset-0 bg-neon-cyan/10"
-                                                initial={{ x: "-100%" }}
-                                                whileHover={{ x: "100%" }}
-                                                transition={{ duration: 0.5 }}
-                                            />
-                                            <span className="relative z-10">{exp.type}</span>
-                                        </motion.span>
-                                        <h3 className="text-2xl md:text-3xl font-bold text-white flex-1">
-                                            {exp.title}
-                                        </h3>
-                                        <motion.div
-                                            animate={{ rotate: isExpanded ? 180 : 0 }}
-                                            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                                            className="flex-shrink-0"
-                                        >
-                                            <ChevronDown className="w-6 h-6 text-neon-cyan" />
-                                        </motion.div>
-                                    </div>
-
-                                    <p className="text-gray-300 mb-6 leading-relaxed text-lg">
-                                        {exp.desc}
-                                    </p>
-
-                                    <div className="flex flex-wrap gap-2">
-                                        {exp.tech.map((tech, techIndex) => (
-                                            <motion.span
-                                                key={tech}
-                                                initial={{ opacity: 0, scale: 0.8 }}
-                                                whileInView={{ opacity: 1, scale: 1 }}
-                                                viewport={{ once: true }}
-                                                transition={{
-                                                    delay: index * 0.15 + techIndex * 0.05,
-                                                    duration: 0.3,
-                                                }}
-                                                whileHover={{ scale: 1.1, y: -2 }}
-                                                className="px-3 py-1 rounded-full bg-neon-purple/20 text-neon-purple text-sm border border-neon-purple/30 cursor-default"
-                                            >
-                                                {tech}
-                                            </motion.span>
-                                        ))}
-                                    </div>
-
-                                    {exp.link && (
-                                        <motion.a
-                                            href={exp.link}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            whileHover={{ scale: 1.02, x: 4 }}
-                                            className="mt-4 inline-flex items-center gap-2 text-neon-cyan underline underline-offset-4 decoration-neon-cyan/50 hover:decoration-neon-cyan"
-                                        >
-                                            <ExternalLink className="w-4 h-4" />
-                                            <span>{exp.linkLabel ?? "サイトを見る"}</span>
-                                        </motion.a>
-                                    )}
-                                </div>
-
-                                {/* 展開される詳細部分 */}
-                                <AnimatePresence>
-                                    {isExpanded && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: "auto", opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                                            className="overflow-hidden relative z-10"
-                                        >
-                                            <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-neon-cyan/20">
-                                                <motion.div
-                                                    initial={{ y: -10, opacity: 0 }}
-                                                    animate={{ y: 0, opacity: 1 }}
-                                                    transition={{ delay: 0.1, duration: 0.4 }}
-                                                    className="pt-6 space-y-4"
-                                                >
-                                                    <h4 className="text-xl font-bold text-neon-cyan mb-3">
-                                                        詳細情報
-                                                    </h4>
-                                                    <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                                                        {exp.details}
-                                                    </p>
-
-                                                    {exp.images && exp.images.length > 0 && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: 0.2, duration: 0.4 }}
-                                                            className="mt-6 grid grid-cols-1 gap-4"
-                                                        >
-                                                            {exp.images.map((image, imgIdx) => (
-                                                                <div
-                                                                    key={imgIdx}
-                                                                    className="overflow-hidden rounded-xl border border-neon-cyan/20 bg-black/40"
-                                                                >
-                                                                    <img
-                                                                        src={image.src}
-                                                                        alt={image.alt ?? `${exp.title} image ${imgIdx + 1}`}
-                                                                        className="w-full h-full object-contain"
-                                                                    />
-                                                                    {image.alt && (
-                                                                        <div className="px-3 py-2 text-sm text-gray-300 border-t border-neon-cyan/10 bg-black/40">
-                                                                            {image.alt}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </motion.div>
-                                                    )}
-
-                                                    {exp.achievements && exp.achievements.length > 0 && (
-                                                        <motion.div
-                                                            initial={{ y: 10, opacity: 0 }}
-                                                            animate={{ y: 0, opacity: 1 }}
-                                                            transition={{ delay: 0.2, duration: 0.4 }}
-                                                            className="mt-6 p-4 bg-neon-cyan/10 rounded-lg border border-neon-cyan/20 relative overflow-hidden"
-                                                        >
-                                                            <motion.div
-                                                                className="absolute inset-0 bg-gradient-to-r from-transparent via-neon-cyan/5 to-transparent"
-                                                                animate={{
-                                                                    x: ["-100%", "200%"],
-                                                                }}
-                                                                transition={{
-                                                                    duration: 2,
-                                                                    repeat: Infinity,
-                                                                    repeatDelay: 3,
-                                                                    ease: "easeInOut",
-                                                                }}
-                                                            />
-                                                            <p className="text-sm text-neon-cyan font-semibold mb-3 relative z-10">
-                                                                主な成果
-                                                            </p>
-                                                            <ul className="space-y-2 relative z-10">
-                                                                {exp.achievements.map((achievement, idx) => (
-                                                                    <motion.li
-                                                                        key={idx}
-                                                                        initial={{ opacity: 0, x: -10 }}
-                                                                        animate={{ opacity: 1, x: 0 }}
-                                                                        transition={{ delay: 0.3 + idx * 0.1, duration: 0.3 }}
-                                                                        className="flex items-start gap-2 text-gray-300 text-sm"
-                                                                    >
-                                                                        <motion.span
-                                                                            className="w-2 h-2 bg-neon-purple rounded-full mt-2 flex-shrink-0"
-                                                                            animate={{ scale: [1, 1.2, 1] }}
-                                                                            transition={{
-                                                                                duration: 2,
-                                                                                repeat: Infinity,
-                                                                                delay: idx * 0.2,
-                                                                            }}
-                                                                        />
-                                                                        <span className="leading-relaxed">{achievement}</span>
-                                                                    </motion.li>
-                                                                ))}
-                                                            </ul>
-                                                        </motion.div>
-                                                    )}
-                                                </motion.div>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* Corner accent */}
-                                <div
-                                    className={`absolute ${index % 2 === 0 ? "top-0 left-0" : "top-0 right-0"
-                                        } w-12 h-12 border-t-2 ${index % 2 === 0 ? "border-l-2 border-neon-cyan/30" : "border-r-2 border-neon-purple/30"
-                                        } opacity-50 ${index % 2 === 0 ? "rounded-tl-2xl" : "rounded-tr-2xl"
-                                        }`}
-                                />
-                            </motion.div>
-                        );
-                    })}
+                    {ln.replace(/^\s*■\s*/, "")}
+                </h4>
+            );
+        } else if (ln.trim().startsWith("【") && ln.trim().endsWith("】")) {
+            flushList();
+            out.push(
+                <h5
+                    key={key++}
+                    className="font-mono text-[10px] uppercase tracking-[0.2em] text-thz-cyan/70 mt-3 mb-1"
+                >
+                    {ln.trim().replace(/^【|】$/g, "")}
+                </h5>
+            );
+        } else if (numbered) {
+            listBuf.push(numbered[2]);
+        } else if (dashBullet) {
+            flushList();
+            out.push(
+                <div
+                    key={key++}
+                    className="flex items-start gap-2 text-sm text-zinc-300 leading-relaxed pl-1"
+                >
+                    <span className="mt-1.5 block w-1 h-1 rounded-full bg-thz-cyan/60 shrink-0" />
+                    <span className="flex-1">
+                        {renderInline(dashBullet[1], key)}
+                    </span>
                 </div>
+            );
+        } else if (ln === "") {
+            flushList();
+        } else {
+            flushList();
+            out.push(
+                <p
+                    key={key++}
+                    className="text-sm text-zinc-300 leading-relaxed"
+                >
+                    {renderInline(ln, key)}
+                </p>
+            );
+        }
+    }
+    flushList();
+    return <div className="space-y-1">{out}</div>;
+}
+
+function ExperiencePane({
+    exp,
+    index,
+    total,
+}: {
+    exp: Exp;
+    index: number;
+    total: number;
+}) {
+    const filename = slugMap[exp.title] ?? "experience.md";
+    const chapter = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{
+                duration: 0.7,
+                delay: Math.min(index * 0.05, 0.2),
+                ease: [0.22, 1, 0.36, 1],
+            }}
+            className="relative px-4"
+        >
+            <div className="max-w-[1440px] mx-auto mb-3 flex items-baseline gap-3">
+                <span className="font-mono text-[10px] text-thz-cyan tracking-[0.3em] uppercase">
+                    {chapter}
+                </span>
+                <span className="h-px flex-1 bg-slate-line" />
+                <span className="font-mono text-[10px] text-zinc-500 tracking-[0.15em] uppercase">
+                    {exp.type}
+                </span>
+                <span className="h-px w-10 bg-slate-line" />
+                <span className="font-mono text-[10px] text-zinc-500 tracking-[0.15em]">
+                    {filename}
+                </span>
             </div>
-        </motion.section>
+            <BrowserChrome url={`akase.dev/${filename}`}>
+                <SplitPane
+                    filename={filename}
+                    codeLines={buildExperienceLines(exp)}
+                    minHeight="auto"
+                    particleDensity={0.75}
+                    rendered={
+                        <div className="flex flex-col gap-5">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <span className="px-2.5 py-0.5 rounded-md bg-thz-cyan/10 border border-thz-cyan/30 text-thz-cyan text-[11px] font-mono tracking-wider uppercase">
+                                    {exp.type}
+                                </span>
+                                <span className="text-zinc-500 text-xs font-mono">
+                                    {filename}
+                                </span>
+                            </div>
+
+                            <div className="relative">
+                                {signatureEq[exp.title] && (
+                                    <span
+                                        aria-hidden
+                                        className="absolute -top-5 left-0 font-serif italic text-zinc-500 whitespace-nowrap text-base md:text-xl pointer-events-none"
+                                        style={{ opacity: 0.14 }}
+                                    >
+                                        {signatureEq[exp.title]}
+                                    </span>
+                                )}
+                                <h3 className="relative font-display text-2xl md:text-3xl font-semibold text-thz-amber tracking-[-0.02em] leading-[1.2]">
+                                    {exp.title}
+                                </h3>
+                            </div>
+
+                            <p className="text-sm md:text-base text-zinc-300 leading-relaxed max-w-2xl">
+                                {exp.desc}
+                            </p>
+
+                            <div className="flex flex-wrap gap-1.5">
+                                {exp.tech.map((t) => (
+                                    <span
+                                        key={t}
+                                        className="px-2 py-0.5 rounded-md border border-slate-line bg-[#14171C] text-[11px] font-mono text-zinc-300"
+                                    >
+                                        {t}
+                                    </span>
+                                ))}
+                            </div>
+
+                            {exp.achievements && exp.achievements.length > 0 && (
+                                <div className="rounded-lg border border-thz-cyan/20 bg-thz-cyan/[0.03] p-4">
+                                    <div className="font-mono text-[10px] text-thz-cyan tracking-[0.2em] uppercase mb-2">
+                                        // outcomes
+                                    </div>
+                                    <ul className="space-y-1.5">
+                                        {exp.achievements.map((a, ai) => (
+                                            <li
+                                                key={ai}
+                                                className="flex items-start gap-2 text-sm text-zinc-300"
+                                            >
+                                                <span className="mt-1.5 block w-1 h-1 rounded-full bg-thz-amber shrink-0" />
+                                                <span className="leading-relaxed">
+                                                    {a}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {exp.details && (
+                                <div className="rounded-lg border border-slate-line bg-[#14171C]/60 p-4">
+                                    <div className="font-mono text-[10px] text-zinc-500 tracking-[0.2em] uppercase mb-2">
+                                        // details
+                                    </div>
+                                    {renderDetails(exp.details)}
+                                </div>
+                            )}
+
+                            {exp.images && exp.images.length > 0 && (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {exp.images.map((image, i) => (
+                                        <div
+                                            key={i}
+                                            className="overflow-hidden rounded-lg border border-slate-line bg-black/40"
+                                        >
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={image.src}
+                                                alt={
+                                                    image.alt ??
+                                                    `${exp.title} image ${i + 1}`
+                                                }
+                                                className="w-full h-auto object-contain"
+                                            />
+                                            {image.alt && (
+                                                <div className="px-3 py-1.5 text-xs text-zinc-400 border-t border-slate-line">
+                                                    {image.alt}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {exp.link && (
+                                <a
+                                    href={exp.link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-sm text-thz-cyan hover:text-thz-amber transition-colors"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span>{exp.linkLabel ?? "サイトを見る"}</span>
+                                </a>
+                            )}
+                        </div>
+                    }
+                />
+            </BrowserChrome>
+        </motion.div>
+    );
+}
+
+export default function Experiences() {
+    return (
+        <section id="experiences" className="relative bg-slate-ink">
+            <TitleWithEquations
+                palette="experiences"
+                chapter="§ experiences/"
+                subtitle={
+                    <p className="font-mono text-xs text-zinc-500 tracking-wider">
+                        // each experience is its own markdown file
+                    </p>
+                }
+            >
+                Experiences
+            </TitleWithEquations>
+            <div className="flex flex-col gap-10 pb-16">
+                {EXPERIENCES.map((exp, i) => (
+                    <ExperiencePane
+                        key={exp.title}
+                        exp={exp}
+                        index={i}
+                        total={EXPERIENCES.length}
+                    />
+                ))}
+            </div>
+        </section>
     );
 }

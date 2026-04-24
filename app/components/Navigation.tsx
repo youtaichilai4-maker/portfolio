@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import { PROFILE } from "../data";
+import MagneticLink from "./MagneticLink";
 
 const navItems = [
     { label: "About", href: "#about" },
@@ -34,49 +35,31 @@ export default function Navigation() {
                 backdropFilter: `blur(${navBlur}px)`,
             }}
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                scrolled ? "glass-card py-4 shadow-lg shadow-neon-cyan/10" : "py-6"
+                scrolled
+                    ? "py-3 bg-slate-ink/70 border-b border-slate-line backdrop-blur-md"
+                    : "py-5"
             }`}
         >
-            <div className="max-w-6xl mx-auto px-4">
+            <div className="max-w-[1440px] mx-auto px-6">
                 <div className="flex justify-between items-center">
-                    <motion.a
-                        href="#"
-                        className="text-lg md:text-xl font-bold text-glow relative group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    <MagneticLink
+                        href="#cover"
+                        strength={8}
+                        className="font-mono text-sm text-thz-amber hover:text-thz-cyan transition-colors inline-block"
                     >
-                        {PROFILE.name}
-                        {/* Underline effect */}
-                        <motion.div
-                            className="absolute bottom-0 left-0 w-0 h-px bg-neon-cyan"
-                            whileHover={{ width: "100%" }}
-                            transition={{ duration: 0.3 }}
-                        />
-                    </motion.a>
+                        {PROFILE.name.toLowerCase().replace(" ", "_")}
+                    </MagneticLink>
 
-                    <div className="flex gap-4 md:gap-6">
-                        {navItems.map((item, index) => (
-                            <motion.a
+                    <div className="flex gap-6">
+                        {navItems.map((item) => (
+                            <MagneticLink
                                 key={item.href}
                                 href={item.href}
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                    delay: index * 0.1,
-                                    duration: 0.5,
-                                    ease: [0.22, 1, 0.36, 1],
-                                }}
-                                whileHover={{ y: -2, color: "#06b6d4" }}
-                                className="text-sm md:text-base text-gray-300 hover:text-neon-cyan transition-colors relative group"
+                                strength={10}
+                                className="font-mono text-xs md:text-sm text-zinc-400 hover:text-thz-cyan transition-colors inline-block"
                             >
-                                {item.label}
-                                {/* Hover underline */}
-                                <motion.div
-                                    className="absolute bottom-0 left-0 w-0 h-px bg-neon-cyan"
-                                    whileHover={{ width: "100%" }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </motion.a>
+                                {item.label.toLowerCase()}.md
+                            </MagneticLink>
                         ))}
                     </div>
                 </div>

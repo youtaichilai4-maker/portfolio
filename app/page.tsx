@@ -1,30 +1,23 @@
 import About from "./components/About";
-import CustomCursor from "./components/CustomCursor";
-import ElectromagneticBackground from "./components/ElectromagneticBackground";
+import ChapterRail from "./components/ChapterRail";
+import CoverHero from "./components/CoverHero";
 import Experiences from "./components/Experiences";
-import Hero from "./components/Hero";
 import Navigation from "./components/Navigation";
 import Skills from "./components/Skills";
+import SplitCompileHero from "./components/SplitCompileHero";
 
 export default function Home() {
     return (
-        <main className="relative">
-            {/* グラデーションメッシュ背景 */}
-            <div className="gradient-mesh" />
-
-            {/* ノイズテクスチャ */}
-            <div className="noise-overlay" />
-
-            {/* Three.js 電磁波背景 */}
-            <ElectromagneticBackground />
-
-            {/* カスタムカーソル */}
-            <CustomCursor />
-
-            {/* メインコンテンツ（z-10以上で背景の上に表示） */}
+        <main className="relative bg-slate-ink min-h-screen">
+            <ChapterRail />
             <div className="relative z-10">
                 <Navigation />
-                <Hero />
+                <div id="cover">
+                    <CoverHero />
+                </div>
+                <div id="hero">
+                    <SplitCompileHero />
+                </div>
                 <About />
                 <Skills />
                 <Experiences />
