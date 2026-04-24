@@ -96,7 +96,7 @@ export default function Skills() {
             >
                 Skills
             </TitleWithEquations>
-            <div className="px-4 pb-12">
+            <div className="px-3 sm:px-4 pb-12">
             <BrowserChrome>
                 <SplitPane
                     filename="skills.md"

@@ -290,7 +290,7 @@ function ExperiencePane({
                 delay: Math.min(index * 0.05, 0.2),
                 ease: [0.22, 1, 0.36, 1],
             }}
-            className="relative px-4"
+            className="relative px-3 sm:px-4"
         >
             <div className="max-w-[1440px] mx-auto mb-3 flex items-baseline gap-3">
                 <span className="font-mono text-[10px] text-thz-cyan tracking-[0.3em] uppercase">
@@ -300,8 +300,8 @@ function ExperiencePane({
                 <span className="font-mono text-[10px] text-zinc-500 tracking-[0.15em] uppercase">
                     {exp.type}
                 </span>
-                <span className="h-px w-10 bg-slate-line" />
-                <span className="font-mono text-[10px] text-zinc-500 tracking-[0.15em]">
+                <span className="hidden md:inline h-px w-10 bg-slate-line" />
+                <span className="hidden md:inline font-mono text-[10px] text-zinc-500 tracking-[0.15em]">
                     {filename}
                 </span>
             </div>

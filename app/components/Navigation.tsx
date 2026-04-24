@@ -40,23 +40,23 @@ export default function Navigation() {
                     : "py-5"
             }`}
         >
-            <div className="max-w-[1440px] mx-auto px-6">
-                <div className="flex justify-between items-center">
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
+                <div className="flex justify-between items-center gap-3">
                     <MagneticLink
                         href="#cover"
                         strength={8}
-                        className="font-mono text-sm text-thz-amber hover:text-thz-cyan transition-colors inline-block"
+                        className="font-mono text-xs sm:text-sm text-thz-amber hover:text-thz-cyan transition-colors inline-block whitespace-nowrap"
                     >
                         {PROFILE.name.toLowerCase().replace(" ", "_")}
                     </MagneticLink>
 
-                    <div className="flex gap-6">
+                    <div className="flex gap-3 sm:gap-6">
                         {navItems.map((item) => (
                             <MagneticLink
                                 key={item.href}
                                 href={item.href}
                                 strength={10}
-                                className="font-mono text-xs md:text-sm text-zinc-400 hover:text-thz-cyan transition-colors inline-block"
+                                className="font-mono text-[10px] sm:text-xs md:text-sm text-zinc-400 hover:text-thz-cyan transition-colors inline-block whitespace-nowrap"
                             >
                                 {item.label.toLowerCase()}.md
                             </MagneticLink>
