@@ -10,11 +10,18 @@ const config: Config = {
         extend: {
             fontFamily: {
                 mono: ["var(--font-jetbrains-mono)", "Courier New", "monospace"],
+                sans: ["var(--font-inter-tight)", "Inter", "system-ui", "sans-serif"],
+                display: ["var(--font-fraunces)", "Fraunces", "Georgia", "serif"],
             },
             colors: {
                 "neon-cyan": "#06b6d4",
                 "neon-purple": "#8b5cf6",
                 "deep-black": "#030712",
+                "thz-cyan": "#7FE3FF",
+                "thz-amber": "#F5A524",
+                "slate-ink": "#0B0D10",
+                "slate-pane": "#0F1216",
+                "slate-line": "#1A1E25",
             },
             backgroundImage: {
                 "circuit-grid": "linear-gradient(to right, rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6, 182, 212, 0.1) 1px, transparent 1px)",
