@@ -29,6 +29,9 @@ export default function ParticleTitle({
     fontWeight = 700,
     sampleStep = 4,
     assembleDuration = 2400,
+    trigger = "mount",
+    as = "h2",
+    textClassName,
 }: {
     text: string;
     className?: string;
@@ -36,18 +39,45 @@ export default function ParticleTitle({
     fontWeight?: number;
     sampleStep?: number;
     assembleDuration?: number;
+    /** "mount" = play on mount, "view" = play on first intersection */
+    trigger?: "mount" | "view";
+    /** Accessible tag for the text (default h2) */
+    as?: "h1" | "h2" | "h3" | "h4" | "span";
+    /** Extra classes for the visible <span>. */
+    textClassName?: string;
 }) {
     const wrapRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const textRef = useRef<HTMLSpanElement>(null);
+    const [started, setStarted] = useState(trigger === "mount");
     const [settled, setSettled] = useState(false);
     const reduced = useReducedMotion();
+
+    // IntersectionObserver — kick off the animation when the title enters view.
+    useEffect(() => {
+        if (trigger !== "view" || started) return;
+        const el = wrapRef.current;
+        if (!el) return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                const e = entries[0];
+                if (e.isIntersecting) {
+                    setStarted(true);
+                    io.disconnect();
+                }
+            },
+            { threshold: 0.3, rootMargin: "0px 0px -10% 0px" }
+        );
+        io.observe(el);
+        return () => io.disconnect();
+    }, [trigger, started]);
 
     useEffect(() => {
         if (reduced) {
             setSettled(true);
             return;
         }
+        if (!started) return;
         const wrap = wrapRef.current;
         const canvas = canvasRef.current;
         const textEl = textRef.current;
@@ -59,7 +89,6 @@ export default function ParticleTitle({
         let cancelled = false;
 
         async function run() {
-            // Wait for webfonts (Inter Tight) to load so the sampled glyph shapes are correct.
             if (document.fonts?.ready) {
                 try {
                     await document.fonts.ready;
@@ -79,7 +108,6 @@ export default function ParticleTitle({
             canvas!.style.height = `${H}px`;
             ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            // Offscreen to sample glyph pixels
             const offs = document.createElement("canvas");
             offs.width = W * dpr;
             offs.height = H * dpr;
@@ -93,7 +121,6 @@ export default function ParticleTitle({
             octx.textBaseline = "top";
             octx.fillStyle = "#fff";
 
-            // Draw at the same position the visible <span> would occupy within the wrap
             const drawX = textRect.left - rect.left;
             const drawY = textRect.top - rect.top + fontSize * 0.08;
             octx.fillText(text, drawX, drawY);
@@ -124,7 +151,6 @@ export default function ParticleTitle({
                 delay: Math.random() * assembleDuration * 0.55,
                 size: 0.6 + Math.random() * 0.9,
             }));
-            // assign shuffled targets
             const shuffled = targets.slice().sort(() => Math.random() - 0.5);
             for (let i = 0; i < particles.length; i++) {
                 particles[i].tx = shuffled[i].x;
@@ -138,7 +164,6 @@ export default function ParticleTitle({
                 const now = performance.now();
                 const elapsed = now - startTime;
 
-                // Fading tail
                 ctx!.globalCompositeOperation = "source-over";
                 ctx!.fillStyle = "rgba(11,13,16,0.22)";
                 ctx!.fillRect(0, 0, W, H);
@@ -159,7 +184,6 @@ export default function ParticleTitle({
                         const dy = p.ty - p.y;
                         const dist = Math.hypot(dx, dy);
 
-                        // Drift-diffusion curl
                         const curlX = Math.sin(p.y * 0.012 + elapsed * 0.0009) * 0.35;
                         const curlY = Math.cos(p.x * 0.012 + elapsed * 0.0011) * 0.18;
 
@@ -178,7 +202,6 @@ export default function ParticleTitle({
                             p.y = p.ty;
                         }
                     } else {
-                        // Gentle Brownian wobble
                         p.x = p.tx + Math.sin(elapsed * 0.003 + p.tx * 0.12) * 0.35;
                         p.y = p.ty + Math.cos(elapsed * 0.0025 + p.ty * 0.12) * 0.35;
                     }
@@ -196,7 +219,6 @@ export default function ParticleTitle({
                     ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx!.fill();
 
-                    // Trail while in transit
                     if (!p.arrived && p.vx * p.vx + p.vy * p.vy > 0.4) {
                         ctx!.strokeStyle = `rgba(${r | 0},${g | 0},${b | 0},${alpha * 0.4})`;
                         ctx!.lineWidth = p.size * 0.8;
@@ -215,7 +237,6 @@ export default function ParticleTitle({
 
                 if (done) {
                     setSettled(true);
-                    // stop once fade-out has completed
                     if (elapsed > assembleDuration + 2000) {
                         return;
                     }
@@ -233,24 +254,35 @@ export default function ParticleTitle({
             cancelled = true;
             cancelAnimationFrame(rafId);
         };
-    }, [text, fontSize, fontWeight, sampleStep, assembleDuration, reduced]);
+    }, [
+        text,
+        fontSize,
+        fontWeight,
+        sampleStep,
+        assembleDuration,
+        reduced,
+        started,
+    ]);
 
+    // Render the semantic heading as the visible text; canvas overlays it.
+    const Tag = as as keyof JSX.IntrinsicElements;
     return (
         <div
             ref={wrapRef}
-            className={`relative ${className}`}
+            className={`relative inline-block align-top ${className}`}
             style={{
                 fontFamily: "var(--font-fraunces), Fraunces, Georgia, serif",
                 minHeight: `${Math.round(fontSize * 1.25)}px`,
             }}
         >
+            <Tag className="sr-only">{text}</Tag>
             <span
                 ref={textRef}
                 aria-hidden={!settled}
-                className="inline-block font-display tracking-tight text-thz-amber leading-[1.05]"
+                className={`inline-block font-display tracking-tight text-thz-amber leading-[1.05] ${textClassName ?? ""}`}
                 style={{
                     fontSize: `${fontSize}px`,
-                    fontWeight: 700,
+                    fontWeight,
                     opacity: settled ? 1 : 0,
                     transition: "opacity 0.7s ease",
                     textShadow: "0 0 28px rgba(245,165,36,0.28)",
@@ -268,7 +300,6 @@ export default function ParticleTitle({
                 }}
                 aria-hidden="true"
             />
-            <h1 className="sr-only">{text}</h1>
         </div>
     );
 }

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { EXPERIENCES } from "../data";
+import ParticleTitle from "./ParticleTitle";
 import SplitPane, {
     BrowserChrome,
     CodeLine,
@@ -331,9 +332,16 @@ function ExperiencePane({
                                         {signatureEq[exp.title]}
                                     </span>
                                 )}
-                                <h3 className="relative font-display text-2xl md:text-3xl font-semibold text-thz-amber tracking-[-0.02em] leading-[1.2]">
-                                    {exp.title}
-                                </h3>
+                                <ParticleTitle
+                                    text={exp.title}
+                                    fontSize={32}
+                                    fontWeight={600}
+                                    sampleStep={3}
+                                    assembleDuration={2000}
+                                    trigger="view"
+                                    as="h3"
+                                    textClassName="!leading-[1.2]"
+                                />
                             </div>
 
                             <p className="text-sm md:text-base text-zinc-300 leading-relaxed max-w-2xl">

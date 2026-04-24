@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
+import ParticleTitle from "./ParticleTitle";
 
 // Math equations that play in the background of big titles — semiconductor
 // physics / drift-diffusion / THz imaging flavor. Positioning is semi-random
@@ -112,7 +113,8 @@ export default function TitleWithEquations({
     chapter,
 }: {
     palette: keyof typeof EQ_PALETTES;
-    children: ReactNode;
+    /** The section heading text (string) */
+    children: string;
     subtitle?: ReactNode;
     chapter?: string;
 }) {
@@ -129,15 +131,13 @@ export default function TitleWithEquations({
                             <span className="h-px flex-1 bg-slate-line" />
                         </div>
                     )}
-                    <motion.h2
-                        initial={{ opacity: 0, y: 12 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                        className="font-display text-6xl md:text-7xl font-bold text-thz-amber tracking-[-0.025em] leading-[1.02]"
-                    >
-                        {children}
-                    </motion.h2>
+                    <ParticleTitle
+                        text={children}
+                        fontSize={84}
+                        fontWeight={700}
+                        trigger="view"
+                        as="h2"
+                    />
                     {subtitle && (
                         <motion.div
                             initial={{ opacity: 0, y: 8 }}
