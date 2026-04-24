@@ -127,10 +127,10 @@ export function CodeLines({
     staggerOnMount?: boolean;
 }) {
     return (
-        <div className="relative font-mono text-[13px] leading-7 py-4">
+        <div className="relative font-mono text-[11px] sm:text-[12px] md:text-[13px] leading-7 py-4 overflow-x-auto">
             {lines.map((line, i) => {
                 const content = (
-                    <div className="flex gap-4 px-6">
+                    <div className="flex gap-3 sm:gap-4 px-4 sm:px-6 min-w-max">
                         <span className="text-zinc-600 w-6 text-right shrink-0 select-none">
                             {line.n}
                         </span>
@@ -185,7 +185,7 @@ export function BrowserChrome({
     children: ReactNode;
 }) {
     return (
-        <div className="w-full max-w-[1440px] mx-auto rounded-xl overflow-hidden border border-slate-line shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)] bg-slate-ink">
+        <div className="w-full max-w-[1440px] mx-auto rounded-lg md:rounded-xl overflow-hidden border border-slate-line shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)] bg-slate-ink">
             <div className="flex items-center gap-3 px-4 h-10 bg-[#14171C] border-b border-slate-line">
                 <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500/90" />
@@ -270,7 +270,7 @@ export default function SplitPane({
                 >
                     <Code2 className="w-5 h-5" />
                 </button>
-                <div className="relative z-10 px-8 md:px-12 py-10 h-full">
+                <div className="relative z-10 px-5 sm:px-8 md:px-12 py-8 md:py-10 h-full">
                     {rendered}
                 </div>
             </div>

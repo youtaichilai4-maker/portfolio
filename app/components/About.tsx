@@ -106,7 +106,7 @@ export default function About() {
             >
                 About
             </TitleWithEquations>
-            <div className="px-4 pb-12">
+            <div className="px-3 sm:px-4 pb-12">
                 <BrowserChrome>
                     <SplitPane
                         filename="about.md"

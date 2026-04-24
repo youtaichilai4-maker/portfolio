@@ -53,6 +53,21 @@ export default function ParticleTitle({
     const [settled, setSettled] = useState(false);
     const reduced = useReducedMotion();
 
+    // Viewport-aware font size — desktop keeps original, mobile/tablet scale down.
+    // Desktop rendering is unchanged (>= 1024).
+    const [fs, setFs] = useState(fontSize);
+    useEffect(() => {
+        const compute = () => {
+            const w = window.innerWidth;
+            if (w < 640) setFs(Math.max(24, Math.round(fontSize * 0.5)));
+            else if (w < 1024) setFs(Math.round(fontSize * 0.72));
+            else setFs(fontSize);
+        };
+        compute();
+        window.addEventListener("resize", compute);
+        return () => window.removeEventListener("resize", compute);
+    }, [fontSize]);
+
     // IntersectionObserver — kick off the animation when the title enters view.
     useEffect(() => {
         if (trigger !== "view" || started) return;
@@ -117,12 +132,12 @@ export default function ParticleTitle({
             const fontFamily =
                 getComputedStyle(textEl!).fontFamily ||
                 '"Fraunces", Georgia, serif';
-            octx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+            octx.font = `${fontWeight} ${fs}px ${fontFamily}`;
             octx.textBaseline = "top";
             octx.fillStyle = "#fff";
 
             const drawX = textRect.left - rect.left;
-            const drawY = textRect.top - rect.top + fontSize * 0.08;
+            const drawY = textRect.top - rect.top + fs * 0.08;
             octx.fillText(text, drawX, drawY);
 
             const img = octx.getImageData(0, 0, offs.width, offs.height).data;
@@ -256,7 +271,7 @@ export default function ParticleTitle({
         };
     }, [
         text,
-        fontSize,
+        fs,
         fontWeight,
         sampleStep,
         assembleDuration,
@@ -269,10 +284,10 @@ export default function ParticleTitle({
     return (
         <div
             ref={wrapRef}
-            className={`relative inline-block align-top ${className}`}
+            className={`relative inline-block align-top max-w-full ${className}`}
             style={{
                 fontFamily: "var(--font-fraunces), Fraunces, Georgia, serif",
-                minHeight: `${Math.round(fontSize * 1.25)}px`,
+                minHeight: `${Math.round(fs * 1.25)}px`,
             }}
         >
             <Tag className="sr-only">{text}</Tag>
@@ -281,7 +296,7 @@ export default function ParticleTitle({
                 aria-hidden={!settled}
                 className={`inline-block font-display tracking-tight text-thz-amber leading-[1.05] ${textClassName ?? ""}`}
                 style={{
-                    fontSize: `${fontSize}px`,
+                    fontSize: `${fs}px`,
                     fontWeight,
                     opacity: settled ? 1 : 0,
                     transition: "opacity 0.7s ease",

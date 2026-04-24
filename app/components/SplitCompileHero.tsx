@@ -112,7 +112,7 @@ const heroLines: CodeLine[] = [
 
 export default function SplitCompileHero() {
     return (
-        <section className="relative min-h-screen flex items-center justify-center px-4 py-16 bg-slate-ink overflow-hidden">
+        <section className="relative min-h-screen flex items-center justify-center px-3 sm:px-4 py-10 sm:py-16 bg-slate-ink overflow-hidden">
             <div
                 aria-hidden="true"
                 className="absolute inset-0 pointer-events-none opacity-40"
@@ -168,7 +168,7 @@ export default function SplitCompileHero() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 1.2, delay: 3.2 }}
-                                className="grid grid-cols-2 gap-4 md:gap-5 mt-auto"
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5 mt-auto"
                             >
                                 {[
                                     {

@@ -79,7 +79,7 @@ export default function CoverHero() {
             const octx = offs.getContext("2d")!;
             octx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            const fontSize = Math.min(240, Math.max(130, W * 0.15));
+            const fontSize = Math.min(240, Math.max(56, W * 0.135));
             const fontFamily = measureRef.current
                 ? getComputedStyle(measureRef.current).fontFamily
                 : '"Fraunces", Georgia, serif';
@@ -370,7 +370,7 @@ export default function CoverHero() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                 transition={{ duration: 1.2, delay: 0.3 }}
-                className="absolute bottom-[14%] left-1/2 -translate-x-1/2 text-center space-y-2"
+                className="absolute bottom-[18%] sm:bottom-[14%] left-0 right-0 text-center space-y-2 px-4"
             >
                 <p className="font-display text-lg md:text-xl text-thz-amber/80 tracking-tight italic">
                     Yuta Akase

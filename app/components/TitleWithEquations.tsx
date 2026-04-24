@@ -119,8 +119,8 @@ export default function TitleWithEquations({
     chapter?: string;
 }) {
     return (
-        <div className="relative px-4">
-            <div className="max-w-[1440px] mx-auto relative py-10">
+        <div className="relative px-4 sm:px-6">
+            <div className="max-w-[1440px] mx-auto relative py-8 sm:py-10">
                 <EquationBackdrop palette={palette} />
                 <div className="relative">
                     {chapter && (
