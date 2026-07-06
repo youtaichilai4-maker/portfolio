@@ -7,10 +7,10 @@ type Section = { id: string; label: string };
 
 const SECTIONS: Section[] = [
     { id: "cover", label: "cover" },
-    { id: "hero", label: "profile.md" },
-    { id: "about", label: "about.md" },
-    { id: "skills", label: "skills.md" },
-    { id: "experiences", label: "experiences/" },
+    { id: "hero", label: "profile" },
+    { id: "about", label: "about" },
+    { id: "skills", label: "skills" },
+    { id: "experiences", label: "exp" },
 ];
 
 export default function ChapterRail() {
@@ -57,7 +57,7 @@ export default function ChapterRail() {
             {/* Right-side chapter rail (desktop only) */}
             <nav
                 aria-label="Chapters"
-                className="fixed right-4 lg:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-4 pointer-events-auto"
+                className="fixed right-2 lg:right-3 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-4 pointer-events-auto"
             >
                 {SECTIONS.map((s, i) => {
                     const isActive = active === s.id;
@@ -66,13 +66,17 @@ export default function ChapterRail() {
                             key={s.id}
                             href={`#${s.id}`}
                             aria-current={isActive ? "true" : undefined}
-                            className="group flex items-center gap-3 justify-end"
+                            className="group relative flex items-center gap-3 justify-end"
                         >
+                            {/* Label sits ABOVE the dot as a small right-anchored
+                                tooltip — not to its left — so it never grows
+                                into the content column, only into the thin
+                                edge margin the dot/number already sit in. */}
                             <span
-                                className={`font-mono text-[11px] tracking-[0.15em] whitespace-nowrap transition-all duration-300 ${
+                                className={`absolute right-0 bottom-[calc(100%+6px)] font-mono text-[10px] tracking-[0.15em] whitespace-nowrap rounded px-2 py-1 border transition-all duration-300 ${
                                     isActive
-                                        ? "text-thz-cyan opacity-100 translate-x-0"
-                                        : "text-zinc-500 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
+                                        ? "text-thz-cyan bg-slate-ink/95 border-slate-line opacity-100 translate-y-0 shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+                                        : "text-zinc-500 bg-slate-ink/95 border-transparent opacity-0 translate-y-1 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:border-slate-line group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
                                 }`}
                             >
                                 {s.label}

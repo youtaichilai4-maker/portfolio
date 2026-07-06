@@ -12,10 +12,10 @@ export default function Home() {
             <ChapterRail />
             <div className="relative z-10">
                 <Navigation />
-                <div id="cover">
+                <div id="cover" className="scroll-mt-24">
                     <CoverHero />
                 </div>
-                <div id="hero">
+                <div id="hero" className="scroll-mt-24">
                     <SplitCompileHero />
                 </div>
                 <About />

@@ -84,7 +84,7 @@ const skillsLines = buildSkillsLines();
 
 export default function Skills() {
     return (
-        <section id="skills" className="relative bg-slate-ink">
+        <section id="skills" className="relative bg-slate-ink scroll-mt-24">
             <TitleWithEquations
                 palette="skills"
                 chapter="§ skills.md"

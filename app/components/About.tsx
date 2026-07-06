@@ -94,7 +94,7 @@ const aboutLines: CodeLine[] = [
 
 export default function About() {
     return (
-        <section id="about" className="relative bg-slate-ink">
+        <section id="about" className="relative bg-slate-ink scroll-mt-24">
             <TitleWithEquations
                 palette="about"
                 chapter="§ about.md"

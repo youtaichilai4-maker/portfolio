@@ -1,8 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { EXPERIENCES } from "../data";
+import {
+    KkGenerationVisual,
+    PaperLensVisual,
+    PinealVisual,
+} from "./ExperienceVisuals";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import ParticleTitle from "./ParticleTitle";
 import SplitPane, {
     BrowserChrome,
@@ -25,6 +32,14 @@ const slugMap: Record<string, string> = {
     "PaperLens — 自分の課題を起点に世に出した SaaS": "personal/paperlens.md",
 };
 
+// Short chip name for the experience index/timeline strip.
+const shortName: Record<string, string> = {
+    "THz-LTEM 逆問題 — 半導体物性の定量推定": "THz-LTEM",
+    "Pineal — HR SaaS & 社内ツールの自発的立ち上げ": "Pineal",
+    "KK-Generation — 曖昧な要求を仕様にし、横断で届けた経験": "KK-Generation",
+    "PaperLens — 自分の課題を起点に世に出した SaaS": "PaperLens",
+};
+
 // "Signature equation" shown faintly behind each pane's title — thematic
 // tagline for the experience.
 const signatureEq: Record<string, string> = {
@@ -39,6 +54,29 @@ const signatureEq: Record<string, string> = {
 };
 
 type Exp = (typeof EXPERIENCES)[number];
+type Accent = "cyan" | "amber";
+
+// Per-panel accent emphasis — alternates cyan-led / amber-led so the 4
+// panels read as a progression rather than 4 identical copies. Structure
+// stays identical across panels; only these accent tokens change.
+function accentTokens(accent: Accent) {
+    if (accent === "cyan") {
+        return {
+            badge: "bg-thz-cyan/10 border-thz-cyan/30 text-thz-cyan",
+            cardBorder: "border-thz-cyan/20 bg-thz-cyan/[0.03]",
+            cardLabel: "text-thz-cyan",
+            bullet: "bg-thz-amber",
+            toggleAccent: "text-thz-cyan hover:text-thz-amber",
+        };
+    }
+    return {
+        badge: "bg-thz-amber/10 border-thz-amber/30 text-thz-amber",
+        cardBorder: "border-thz-amber/20 bg-thz-amber/[0.03]",
+        cardLabel: "text-thz-amber",
+        bullet: "bg-thz-cyan",
+        toggleAccent: "text-thz-amber hover:text-thz-cyan",
+    };
+}
 
 function buildExperienceLines(exp: Exp): CodeLine[] {
     const lines: CodeLine[] = [];
@@ -268,20 +306,118 @@ function renderDetails(details: string | undefined) {
     return <div className="space-y-1">{out}</div>;
 }
 
+// Collapsed-by-default "read the full story" panel. The details text stays
+// mounted in the DOM at all times (collapsed via height, not unmounted) so
+// search engines / AI screeners can still read it — only the visual height
+// animates, and that animation is skipped entirely under reduced motion.
+function DetailsToggle({
+    details,
+    accent,
+}: {
+    details: string;
+    accent: Accent;
+}) {
+    const [open, setOpen] = useState(false);
+    const reduced = useReducedMotion();
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [height, setHeight] = useState(0);
+    const tokens = accentTokens(accent);
+
+    useEffect(() => {
+        const measure = () => {
+            if (contentRef.current) setHeight(contentRef.current.scrollHeight);
+        };
+        measure();
+        window.addEventListener("resize", measure);
+        return () => window.removeEventListener("resize", measure);
+    }, [details]);
+
+    return (
+        <div className="rounded-lg border border-slate-line bg-[#14171C]/60">
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 font-mono text-[11px] tracking-[0.15em] uppercase transition-colors ${tokens.toggleAccent}`}
+            >
+                <span>
+                    {open ? "// collapse the full story" : "// read the full story"}
+                </span>
+                <ChevronDown
+                    className={`w-4 h-4 shrink-0 transition-transform duration-300 ${
+                        open ? "rotate-180" : ""
+                    }`}
+                />
+            </button>
+            <motion.div
+                initial={false}
+                animate={{ height: open ? height : 0 }}
+                transition={
+                    reduced ? { duration: 0 } : { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+                }
+                className="overflow-hidden"
+            >
+                <div ref={contentRef} className="px-4 pb-4 pt-1">
+                    {renderDetails(details)}
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+
+// Signature visual slot — a real screenshot for THz-LTEM (its own waveform
+// plot), a wireframe SVG diagram for the other three. Same bordered slot
+// across all four so the panels read as one system.
+function SignatureVisual({ exp }: { exp: Exp }) {
+    if (exp.images && exp.images.length > 0) {
+        const image = exp.images[0];
+        return (
+            <div className="overflow-hidden rounded-lg border border-slate-line bg-black/40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src={image.src}
+                    alt={image.alt ?? `${exp.title} image`}
+                    className="w-full h-auto object-contain"
+                />
+            </div>
+        );
+    }
+    const name = shortName[exp.title];
+    const visual =
+        name === "Pineal" ? (
+            <PinealVisual />
+        ) : name === "KK-Generation" ? (
+            <KkGenerationVisual />
+        ) : name === "PaperLens" ? (
+            <PaperLensVisual />
+        ) : null;
+    if (!visual) return null;
+    return (
+        <div className="rounded-lg border border-slate-line bg-[#0B0D10]/60 p-3">
+            {visual}
+        </div>
+    );
+}
+
 function ExperiencePane({
     exp,
     index,
     total,
+    panelId,
 }: {
     exp: Exp;
     index: number;
     total: number;
+    panelId: string;
 }) {
     const filename = slugMap[exp.title] ?? "experience.md";
     const chapter = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+    const accent: Accent = index % 2 === 0 ? "cyan" : "amber";
+    const tokens = accentTokens(accent);
 
     return (
         <motion.div
+            id={panelId}
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
@@ -290,7 +426,7 @@ function ExperiencePane({
                 delay: Math.min(index * 0.05, 0.2),
                 ease: [0.22, 1, 0.36, 1],
             }}
-            className="relative px-3 sm:px-4"
+            className="relative px-3 sm:px-4 scroll-mt-24"
         >
             <div className="max-w-[1440px] mx-auto mb-3 flex items-baseline gap-3">
                 <span className="font-mono text-[10px] text-thz-cyan tracking-[0.3em] uppercase">
@@ -313,15 +449,6 @@ function ExperiencePane({
                     particleDensity={0.75}
                     rendered={
                         <div className="flex flex-col gap-5">
-                            <div className="flex items-center gap-3 flex-wrap">
-                                <span className="px-2.5 py-0.5 rounded-md bg-thz-cyan/10 border border-thz-cyan/30 text-thz-cyan text-[11px] font-mono tracking-wider uppercase">
-                                    {exp.type}
-                                </span>
-                                <span className="text-zinc-500 text-xs font-mono">
-                                    {filename}
-                                </span>
-                            </div>
-
                             <div className="relative">
                                 {signatureEq[exp.title] && (
                                     <span
@@ -348,83 +475,69 @@ function ExperiencePane({
                                 {exp.desc}
                             </p>
 
-                            <div className="flex flex-wrap gap-1.5">
-                                {exp.tech.map((t) => (
-                                    <span
-                                        key={t}
-                                        className="px-2 py-0.5 rounded-md border border-slate-line bg-[#14171C] text-[11px] font-mono text-zinc-300"
-                                    >
-                                        {t}
-                                    </span>
-                                ))}
+                            <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-5 items-start">
+                                <div className="flex flex-col gap-4 min-w-0">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        <span
+                                            className={`px-2.5 py-0.5 rounded-md border text-[11px] font-mono tracking-wider uppercase ${tokens.badge}`}
+                                        >
+                                            {exp.type}
+                                        </span>
+                                        {exp.tech.map((t) => (
+                                            <span
+                                                key={t}
+                                                className="px-2 py-0.5 rounded-md border border-slate-line bg-[#14171C] text-[11px] font-mono text-zinc-300"
+                                            >
+                                                {t}
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    {exp.achievements && exp.achievements.length > 0 && (
+                                        <div
+                                            className={`rounded-lg border p-4 ${tokens.cardBorder}`}
+                                        >
+                                            <div
+                                                className={`font-mono text-[10px] tracking-[0.2em] uppercase mb-2 ${tokens.cardLabel}`}
+                                            >
+                                                // outcomes
+                                            </div>
+                                            <ul className="space-y-1.5">
+                                                {exp.achievements.map((a, ai) => (
+                                                    <li
+                                                        key={ai}
+                                                        className="flex items-start gap-2 text-sm text-zinc-300"
+                                                    >
+                                                        <span
+                                                            className={`mt-1.5 block w-1 h-1 rounded-full shrink-0 ${tokens.bullet}`}
+                                                        />
+                                                        <span className="leading-relaxed">
+                                                            {a}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {exp.link && (
+                                        <a
+                                            href={exp.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-sm text-thz-cyan hover:text-thz-amber transition-colors"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                            <span>{exp.linkLabel ?? "サイトを見る"}</span>
+                                        </a>
+                                    )}
+                                </div>
+
+                                <SignatureVisual exp={exp} />
                             </div>
 
-                            {exp.achievements && exp.achievements.length > 0 && (
-                                <div className="rounded-lg border border-thz-cyan/20 bg-thz-cyan/[0.03] p-4">
-                                    <div className="font-mono text-[10px] text-thz-cyan tracking-[0.2em] uppercase mb-2">
-                                        // outcomes
-                                    </div>
-                                    <ul className="space-y-1.5">
-                                        {exp.achievements.map((a, ai) => (
-                                            <li
-                                                key={ai}
-                                                className="flex items-start gap-2 text-sm text-zinc-300"
-                                            >
-                                                <span className="mt-1.5 block w-1 h-1 rounded-full bg-thz-amber shrink-0" />
-                                                <span className="leading-relaxed">
-                                                    {a}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-
                             {exp.details && (
-                                <div className="rounded-lg border border-slate-line bg-[#14171C]/60 p-4">
-                                    <div className="font-mono text-[10px] text-zinc-500 tracking-[0.2em] uppercase mb-2">
-                                        // details
-                                    </div>
-                                    {renderDetails(exp.details)}
-                                </div>
-                            )}
-
-                            {exp.images && exp.images.length > 0 && (
-                                <div className="grid grid-cols-1 gap-3">
-                                    {exp.images.map((image, i) => (
-                                        <div
-                                            key={i}
-                                            className="overflow-hidden rounded-lg border border-slate-line bg-black/40"
-                                        >
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={image.src}
-                                                alt={
-                                                    image.alt ??
-                                                    `${exp.title} image ${i + 1}`
-                                                }
-                                                className="w-full h-auto object-contain"
-                                            />
-                                            {image.alt && (
-                                                <div className="px-3 py-1.5 text-xs text-zinc-400 border-t border-slate-line">
-                                                    {image.alt}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {exp.link && (
-                                <a
-                                    href={exp.link}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-sm text-thz-cyan hover:text-thz-amber transition-colors"
-                                >
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                    <span>{exp.linkLabel ?? "サイトを見る"}</span>
-                                </a>
+                                <DetailsToggle details={exp.details} accent={accent} />
                             )}
                         </div>
                     }
@@ -434,9 +547,79 @@ function ExperiencePane({
     );
 }
 
-export default function Experiences() {
+function ExperienceTimeline({
+    items,
+}: {
+    items: { id: string; type: string; name: string }[];
+}) {
+    const [active, setActive] = useState(items[0]?.id);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries
+                    .filter((e) => e.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+                if (visible[0]?.target?.id) {
+                    setActive(visible[0].target.id);
+                }
+            },
+            {
+                threshold: [0, 0.25, 0.5, 0.75, 1],
+                rootMargin: "-15% 0px -60% 0px",
+            }
+        );
+        items.forEach((it) => {
+            const el = document.getElementById(it.id);
+            if (el) observer.observe(el);
+        });
+        return () => observer.disconnect();
+    }, [items]);
+
     return (
-        <section id="experiences" className="relative bg-slate-ink">
+        <nav
+            aria-label="Experiences timeline"
+            className="max-w-[1440px] mx-auto mb-8 flex flex-wrap items-center gap-2"
+        >
+            {items.map((it, i) => {
+                const isActive = active === it.id;
+                return (
+                    <a
+                        key={it.id}
+                        href={`#${it.id}`}
+                        aria-current={isActive ? "true" : undefined}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono text-[11px] tracking-wider transition-all duration-300 ${
+                            isActive
+                                ? "border-thz-cyan/50 bg-thz-cyan/10 text-thz-cyan"
+                                : "border-slate-line text-zinc-500 hover:border-thz-cyan/30 hover:text-zinc-300"
+                        }`}
+                    >
+                        <span
+                            className={isActive ? "text-thz-amber" : "text-zinc-600"}
+                        >
+                            {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span>{it.type}</span>
+                        <span className="text-zinc-700" aria-hidden>
+                            ·
+                        </span>
+                        <span className="text-zinc-400">{it.name}</span>
+                    </a>
+                );
+            })}
+        </nav>
+    );
+}
+
+export default function Experiences() {
+    const timelineItems = EXPERIENCES.map((exp, i) => ({
+        id: `exp-panel-${i}`,
+        type: exp.type,
+        name: shortName[exp.title] ?? exp.title,
+    }));
+
+    return (
+        <section id="experiences" className="relative bg-slate-ink scroll-mt-24">
             <TitleWithEquations
                 palette="experiences"
                 chapter="§ experiences/"
@@ -448,6 +631,9 @@ export default function Experiences() {
             >
                 Experiences
             </TitleWithEquations>
+            <div className="px-3 sm:px-4">
+                <ExperienceTimeline items={timelineItems} />
+            </div>
             <div className="flex flex-col gap-10 pb-16">
                 {EXPERIENCES.map((exp, i) => (
                     <ExperiencePane
@@ -455,6 +641,7 @@ export default function Experiences() {
                         exp={exp}
                         index={i}
                         total={EXPERIENCES.length}
+                        panelId={`exp-panel-${i}`}
                     />
                 ))}
             </div>
