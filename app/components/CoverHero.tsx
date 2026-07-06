@@ -93,6 +93,15 @@ export default function CoverHero() {
 
         let rafId = 0;
         let cancelled = false;
+        let sectionVisible = true;
+        let looping = false;
+        let resumeFrame: (() => void) | null = null;
+
+        function scheduleFrame(fn: () => void) {
+            if (looping || cancelled) return;
+            looping = true;
+            rafId = requestAnimationFrame(fn);
+        }
 
         async function run() {
             if (document.fonts?.ready) {
@@ -219,6 +228,7 @@ export default function CoverHero() {
 
             function frame() {
                 if (cancelled) return;
+                looping = false;
                 const now = performance.now();
                 const elapsed = now - startTime;
 
@@ -348,16 +358,32 @@ export default function CoverHero() {
                     setReady(true);
                 }
 
-                rafId = requestAnimationFrame(frame);
+                if (sectionVisible) scheduleFrame(frame);
             }
 
-            rafId = requestAnimationFrame(frame);
+            resumeFrame = frame;
+            scheduleFrame(frame);
         }
+
+        // Stop the rAF loop entirely once the hero scrolls fully offscreen
+        // (idle wobble + pointer spring physics have no visible effect then),
+        // and resume seamlessly on re-entry — elapsed time is derived from
+        // performance.now() each frame, so there is no phase jump on resume.
+        const io = new IntersectionObserver(
+            (entries) => {
+                const isVisible = entries[0].isIntersecting;
+                sectionVisible = isVisible;
+                if (isVisible && resumeFrame) scheduleFrame(resumeFrame);
+            },
+            { threshold: 0 }
+        );
+        io.observe(wrap);
 
         run();
 
         return () => {
             cancelled = true;
+            io.disconnect();
             cancelAnimationFrame(rafId);
             wrap.removeEventListener("pointermove", handlePointerMove);
             wrap.removeEventListener("pointerleave", handlePointerLeave);

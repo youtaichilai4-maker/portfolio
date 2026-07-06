@@ -30,6 +30,15 @@ export default function Tilt3D({
     const glareY = useTransform(my, (v) => `${v * 100}%`);
     const glareOpacity = useMotionValue(0);
     const glareOpacitySpring = useSpring(glareOpacity, { stiffness: 180, damping: 20 });
+    // Hooks must run unconditionally on every render — `reduced` flips from
+    // false to true asynchronously (see useReducedMotion), so this cannot
+    // live below the `if (reduced) return ...` early return or React throws
+    // "Rendered fewer hooks than expected" on that transition.
+    const glareBackground = useTransform(
+        [glareX, glareY] as const,
+        ([x, y]) =>
+            `radial-gradient(300px circle at ${x} ${y}, rgba(127,227,255,0.18), transparent 50%)`
+    );
 
     const handleMove = (e: React.MouseEvent) => {
         if (reduced) return;
@@ -72,11 +81,7 @@ export default function Tilt3D({
                     className="absolute inset-0 pointer-events-none rounded-[inherit]"
                     style={{
                         opacity: glareOpacitySpring,
-                        background: useTransform(
-                            [glareX, glareY] as const,
-                            ([x, y]) =>
-                                `radial-gradient(300px circle at ${x} ${y}, rgba(127,227,255,0.18), transparent 50%)`
-                        ),
+                        background: glareBackground,
                     }}
                 />
             )}

@@ -1,6 +1,6 @@
 # Portfolio Website
 
-A high-performance, visually stunning single-page portfolio website built with Next.js 14+ (App Router), TypeScript, Tailwind CSS, and Framer Motion.
+A high-performance, visually stunning single-page portfolio website built with Next.js 14+ (App Router), TypeScript, Tailwind CSS, Framer Motion, and React Three Fiber.
 
 ## Tech Stack
 
@@ -8,13 +8,16 @@ A high-performance, visually stunning single-page portfolio website built with N
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **Animation:** Framer Motion
+- **3D / particles:** @react-three/fiber + three (GPU drift field), plus hand-rolled 2D canvas particle physics for the hero/section titles
+- **Smooth scroll:** lenis
 - **Icons:** lucide-react
 
 ## Design Concept
 
-- **Theme:** "Semiconductor & Cyberpunk" - Dark mode only
-- **Colors:** Deep black (#030712), Neon Cyan (#06b6d4), Neon Purple (#8b5cf6)
-- **Visual Effects:** Circuit board grid pattern, glowing text, glassmorphism cards
+- **Theme:** "Markdown source → rendered output" — the whole site reads as a split-pane editor, dark mode only
+- **Colors:** Slate-ink background (#0B0D10), Cyan (#7FE3FF), Amber (#F5A524)
+- **Typography:** Fraunces (display serif), Inter Tight (body/UI), JetBrains Mono (code, labels, timestamps)
+- **Visual Effects:** Drift-diffusion particle physics — the hero title assembles from a 2D canvas particle simulation with pointer-reactive spring physics, while an ambient R3F/GPU particle field (`DriftField`) drifts in the background, mounted only when its section is in view
 
 ## Getting Started
 
