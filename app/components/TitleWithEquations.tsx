@@ -122,7 +122,11 @@ export default function TitleWithEquations({
         <div className="relative px-4 sm:px-6">
             <div className="max-w-[1440px] mx-auto relative py-8 sm:py-10">
                 <EquationBackdrop palette={palette} />
-                <div className="relative">
+                {/* Solid backdrop behind the label/title/caption — matches the
+                    section background so it silently occludes any equation
+                    glyphs that would otherwise sit behind the text instead of
+                    around it (confirmed collision at 390/768/1440px). */}
+                <div className="relative bg-slate-ink">
                     {chapter && (
                         <div className="mb-3 flex items-baseline gap-3">
                             <span className="font-mono text-[10px] text-thz-cyan tracking-[0.3em] uppercase">

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import DriftDiffusionParticles from "./DriftDiffusionParticles";
 
 export type CodeLine = {
@@ -130,11 +130,11 @@ export function CodeLines({
         <div className="relative font-mono text-[11px] sm:text-[12px] md:text-[13px] leading-7 py-4 overflow-x-auto">
             {lines.map((line, i) => {
                 const content = (
-                    <div className="flex gap-3 sm:gap-4 px-4 sm:px-6 min-w-max">
+                    <div className="flex gap-3 sm:gap-4 px-4 sm:px-6 lg:min-w-max">
                         <span className="text-zinc-600 w-6 text-right shrink-0 select-none">
                             {line.n}
                         </span>
-                        <span className="whitespace-pre">
+                        <span className="whitespace-pre-wrap break-words lg:whitespace-pre min-w-0 flex-1">
                             {line.render ?? " "}
                         </span>
                     </div>
@@ -223,55 +223,102 @@ export default function SplitPane({
     ambientParticles?: boolean;
     particleDensity?: number;
 }) {
-    return (
-        <div
-            className="grid grid-cols-1 lg:grid-cols-2"
-            style={{ minHeight }}
-        >
-            {/* LEFT — code editor */}
-            <div className="relative bg-[#0B0D10] border-b lg:border-b-0 lg:border-r border-slate-line">
-                <EquationLayer />
-                <div className="flex items-center gap-3 px-4 h-10 border-b border-slate-line/70">
-                    <div className="w-4 h-4 flex flex-col justify-between">
-                        <span className="block w-full h-[2px] bg-zinc-500" />
-                        <span className="block w-full h-[2px] bg-zinc-500" />
-                        <span className="block w-full h-[2px] bg-zinc-500" />
-                    </div>
-                    <span className="font-mono text-xs text-zinc-400">
-                        {filename}
-                    </span>
-                </div>
-                <CodeLines lines={codeLines} staggerOnMount={staggerOnMount} />
-            </div>
+    const [mobileTab, setMobileTab] = useState<"preview" | "source">("preview");
 
-            {/* RIGHT — rendered view */}
-            <div className="relative bg-[#0B0D10] overflow-hidden">
-                <EquationLayer />
-                {ambientParticles && (
-                    <DriftDiffusionParticles
-                        className="absolute inset-0 w-full h-full"
-                        density={particleDensity}
-                    />
-                )}
-                {rightChildren}
-                {/* subtle right-edge amber glow suggesting "settled" field */}
-                <div
-                    aria-hidden
-                    className="absolute inset-y-0 right-0 w-1/3 pointer-events-none"
-                    style={{
-                        background:
-                            "radial-gradient(ellipse at 100% 50%, rgba(245,165,36,0.06), transparent 60%)",
-                    }}
-                />
+    return (
+        <div>
+            {/* Mobile/tablet tabs — preview is default, source shows the code
+                pane. Hidden at lg+, where the side-by-side grid is unchanged. */}
+            <div
+                role="tablist"
+                aria-label="View"
+                className="flex items-center gap-1 px-3 pt-2 bg-[#14171C] border-b border-slate-line/70 lg:hidden"
+            >
                 <button
                     type="button"
-                    aria-label="View source"
-                    className="absolute top-3 right-4 z-20 text-zinc-500 hover:text-thz-cyan transition-colors"
+                    role="tab"
+                    aria-selected={mobileTab === "preview"}
+                    onClick={() => setMobileTab("preview")}
+                    className={`px-3 py-1.5 rounded-t-md font-mono text-xs tracking-wide border border-b-0 transition-colors ${
+                        mobileTab === "preview"
+                            ? "bg-[#0B0D10] border-slate-line text-thz-cyan"
+                            : "border-transparent text-zinc-500 hover:text-zinc-300"
+                    }`}
                 >
-                    <Code2 className="w-5 h-5" />
+                    preview
                 </button>
-                <div className="relative z-10 px-5 sm:px-8 md:px-12 py-8 md:py-10 h-full">
-                    {rendered}
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mobileTab === "source"}
+                    onClick={() => setMobileTab("source")}
+                    className={`px-3 py-1.5 rounded-t-md font-mono text-xs tracking-wide border border-b-0 transition-colors ${
+                        mobileTab === "source"
+                            ? "bg-[#0B0D10] border-slate-line text-thz-cyan"
+                            : "border-transparent text-zinc-500 hover:text-zinc-300"
+                    }`}
+                >
+                    source
+                </button>
+            </div>
+
+            <div
+                className="grid grid-cols-1 lg:grid-cols-2"
+                style={{ minHeight }}
+            >
+                {/* LEFT — code editor */}
+                <div
+                    className={`relative bg-[#0B0D10] border-b lg:border-b-0 lg:border-r border-slate-line ${
+                        mobileTab === "source" ? "block" : "hidden"
+                    } lg:block`}
+                >
+                    <EquationLayer />
+                    <div className="flex items-center gap-3 px-4 h-10 border-b border-slate-line/70">
+                        <div className="w-4 h-4 flex flex-col justify-between">
+                            <span className="block w-full h-[2px] bg-zinc-500" />
+                            <span className="block w-full h-[2px] bg-zinc-500" />
+                            <span className="block w-full h-[2px] bg-zinc-500" />
+                        </div>
+                        <span className="font-mono text-xs text-zinc-400">
+                            {filename}
+                        </span>
+                    </div>
+                    <CodeLines lines={codeLines} staggerOnMount={staggerOnMount} />
+                </div>
+
+                {/* RIGHT — rendered view */}
+                <div
+                    className={`relative bg-[#0B0D10] overflow-hidden ${
+                        mobileTab === "preview" ? "block" : "hidden"
+                    } lg:block`}
+                >
+                    <EquationLayer />
+                    {ambientParticles && (
+                        <DriftDiffusionParticles
+                            className="absolute inset-0 w-full h-full"
+                            density={particleDensity}
+                        />
+                    )}
+                    {rightChildren}
+                    {/* subtle right-edge amber glow suggesting "settled" field */}
+                    <div
+                        aria-hidden
+                        className="absolute inset-y-0 right-0 w-1/3 pointer-events-none"
+                        style={{
+                            background:
+                                "radial-gradient(ellipse at 100% 50%, rgba(245,165,36,0.06), transparent 60%)",
+                        }}
+                    />
+                    <button
+                        type="button"
+                        aria-label="View source"
+                        className="absolute top-3 right-4 z-20 text-zinc-500 hover:text-thz-cyan transition-colors"
+                    >
+                        <Code2 className="w-5 h-5" />
+                    </button>
+                    <div className="relative z-10 px-5 sm:px-8 md:px-12 py-8 md:py-10 h-full">
+                        {rendered}
+                    </div>
                 </div>
             </div>
         </div>

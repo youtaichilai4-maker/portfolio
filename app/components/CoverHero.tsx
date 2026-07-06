@@ -79,16 +79,27 @@ export default function CoverHero() {
             const octx = offs.getContext("2d")!;
             octx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            const fontSize = Math.min(240, Math.max(56, W * 0.135));
+            let fontSize = Math.min(240, Math.max(56, W * 0.135));
             const fontFamily = measureRef.current
                 ? getComputedStyle(measureRef.current).fontFamily
                 : '"Fraunces", Georgia, serif';
+            const text = "Physics × ML";
+
+            // Measure at the initial size, then scale down if the text would
+            // overflow the viewport (guarantees "Physics × ML" always fits).
+            const HORIZONTAL_PADDING_PX = 32;
             octx.font = `800 ${fontSize}px ${fontFamily}`;
+            let metrics = octx.measureText(text);
+            const maxTextWidth = W - HORIZONTAL_PADDING_PX;
+            if (metrics.width > maxTextWidth) {
+                fontSize *= maxTextWidth / metrics.width;
+                octx.font = `800 ${fontSize}px ${fontFamily}`;
+                metrics = octx.measureText(text);
+            }
+
             octx.textBaseline = "middle";
             octx.fillStyle = "#fff";
 
-            const text = "Physics × ML";
-            const metrics = octx.measureText(text);
             const totalW = metrics.width;
             const textX = (W - totalW) / 2;
             const textY = H / 2;
@@ -267,34 +278,34 @@ export default function CoverHero() {
         >
             {/* Background equations & decorative sketches */}
             <div aria-hidden className="absolute inset-0 pointer-events-none select-none">
-                {/* Top row equations */}
+                {/* Top row equations — most hidden below md to avoid crowding the title on small screens */}
                 <span className="absolute top-[8%] left-[6%] text-zinc-500/40 font-serif italic text-lg md:text-xl">
                     ∂n/∂t = D∇²n + μE·∇n − n/τ + G
                 </span>
-                <span className="absolute top-[16%] left-[52%] text-zinc-500/30 font-serif italic text-lg">
+                <span className="hidden md:inline absolute top-[16%] left-[52%] text-zinc-500/30 font-serif italic text-lg">
                     μE
                 </span>
-                <span className="absolute top-[12%] right-[28%] text-zinc-500/30 font-serif italic text-sm">
+                <span className="hidden md:inline absolute top-[12%] right-[28%] text-zinc-500/30 font-serif italic text-sm">
                     E = hν
                 </span>
-                <span className="absolute top-[8%] right-[8%] text-zinc-500/25 font-serif italic text-sm">
+                <span className="hidden md:inline absolute top-[8%] right-[8%] text-zinc-500/25 font-serif italic text-sm">
                     ∂n/∂t
                 </span>
 
                 {/* Bottom row equations */}
-                <span className="absolute bottom-[14%] left-[22%] text-zinc-500/35 font-serif italic text-lg">
+                <span className="hidden md:inline absolute bottom-[14%] left-[22%] text-zinc-500/35 font-serif italic text-lg">
                     D∇²n
                 </span>
-                <span className="absolute bottom-[14%] left-[42%] text-zinc-500/30 font-serif italic text-lg">
+                <span className="hidden md:inline absolute bottom-[14%] left-[42%] text-zinc-500/30 font-serif italic text-lg">
                     n(x, t)
                 </span>
-                <span className="absolute bottom-[14%] right-[30%] text-zinc-500/35 font-serif italic text-lg">
+                <span className="hidden md:inline absolute bottom-[14%] right-[30%] text-zinc-500/35 font-serif italic text-lg">
                     ∇·J = q
                 </span>
-                <span className="absolute bottom-[8%] left-[32%] text-zinc-500/30 font-serif italic text-sm">
+                <span className="hidden md:inline absolute bottom-[8%] left-[32%] text-zinc-500/30 font-serif italic text-sm">
                     n²τ
                 </span>
-                <span className="absolute bottom-[8%] left-[44%] text-zinc-500/30 font-serif italic text-sm">
+                <span className="hidden md:inline absolute bottom-[8%] left-[44%] text-zinc-500/30 font-serif italic text-sm">
                     ∫ f(x) e⁻ⁱᵏˣ dx
                 </span>
                 <span className="absolute bottom-[8%] right-[18%] text-zinc-500/30 font-serif italic text-sm">
@@ -303,7 +314,7 @@ export default function CoverHero() {
 
                 {/* Top-right sine waveform */}
                 <svg
-                    className="absolute top-[14%] right-[10%] text-zinc-500/30"
+                    className="hidden md:block absolute top-[14%] right-[10%] text-zinc-500/30"
                     width="160"
                     height="40"
                     viewBox="0 0 160 40"
@@ -316,7 +327,7 @@ export default function CoverHero() {
 
                 {/* Bottom-left damped oscillation */}
                 <svg
-                    className="absolute bottom-[18%] left-[6%] text-zinc-500/30"
+                    className="hidden md:block absolute bottom-[18%] left-[6%] text-zinc-500/30"
                     width="180"
                     height="60"
                     viewBox="0 0 180 60"
@@ -364,6 +375,21 @@ export default function CoverHero() {
             </span>
 
             <h1 className="sr-only">Physics × ML — Yuta Akase</h1>
+
+            {/* Reduced-motion fallback — canvas never draws in this mode, so
+                render a static readable title instead. */}
+            {reduced && (
+                <div
+                    aria-hidden="true"
+                    className="absolute inset-0 flex items-center justify-center px-8 pointer-events-none select-none"
+                >
+                    <p className="font-display font-extrabold tracking-tight text-4xl sm:text-5xl md:text-7xl text-center">
+                        <span className="text-thz-cyan">Physics</span>
+                        <span className="text-thz-amber mx-2 sm:mx-3">×</span>
+                        <span className="text-thz-amber">ML</span>
+                    </p>
+                </div>
+            )}
 
             {/* Subtle caption (fades in when title has settled) */}
             <motion.div
