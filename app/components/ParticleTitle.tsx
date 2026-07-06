@@ -280,7 +280,11 @@ export default function ParticleTitle({
     ]);
 
     // Render the semantic heading as the visible text; canvas overlays it.
-    const Tag = as as keyof JSX.IntrinsicElements;
+    // Cast to the same literal union as the `as` prop (not the broader
+    // `keyof JSX.IntrinsicElements`) — @react-three/fiber globally augments
+    // that namespace with three.js elements like `primitive` that require
+    // an `object` prop, which would otherwise leak into this type.
+    const Tag = as as "h1" | "h2" | "h3" | "h4" | "span";
     return (
         <div
             ref={wrapRef}

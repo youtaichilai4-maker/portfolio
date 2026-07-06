@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-    html {
-        scroll-behavior: smooth;
-    }
+    /* No `scroll-behavior: smooth` here — Lenis (app/components/SmoothScroll.tsx)
+       owns smooth scrolling via its own rAF loop; native CSS smooth-scroll
+       would otherwise fight Lenis's repeated window.scrollTo calls. */
 
     body {
         background-color: #0B0D10;

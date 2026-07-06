@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import SmoothScroll from "./components/SmoothScroll";
 
 const jetbrainsMono = JetBrains_Mono({
     subsets: ["latin"],
@@ -42,7 +43,10 @@ export default function RootLayout({
             lang="ja"
             className={`${jetbrainsMono.variable} ${interTight.variable} ${fraunces.variable}`}
         >
-            <body className="antialiased">{children}</body>
+            <body className="antialiased">
+                <SmoothScroll />
+                {children}
+            </body>
         </html>
     );
 }

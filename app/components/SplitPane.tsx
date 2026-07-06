@@ -2,8 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { ReactNode, useState } from "react";
-import DriftDiffusionParticles from "./DriftDiffusionParticles";
+
+// WebGL/three.js only ever runs client-side — keep it out of the SSR bundle.
+const DriftField = dynamic(() => import("./DriftField"), { ssr: false });
 
 export type CodeLine = {
     n: number;
@@ -294,7 +297,7 @@ export default function SplitPane({
                 >
                     <EquationLayer />
                     {ambientParticles && (
-                        <DriftDiffusionParticles
+                        <DriftField
                             className="absolute inset-0 w-full h-full"
                             density={particleDensity}
                         />

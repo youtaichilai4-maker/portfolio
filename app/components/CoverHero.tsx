@@ -21,7 +21,20 @@ type Particle = {
     size: number;
     color: Color;
     origin: "left" | "right" | "top";
+    // pointer-field displacement (offset from tx/ty) once settled — a
+    // damped spring so a disturbed particle always returns to its target.
+    dx: number;
+    dy: number;
+    vdx: number;
+    vdy: number;
 };
+
+// Pointer-as-field interaction tuning (settled title particles only).
+const POINTER_FIELD_RADIUS_PX = 90;
+const POINTER_FIELD_FORCE = 5.5;
+const MAX_DISPLACEMENT_PX = 26;
+const SPRING_K = 0.02;
+const SPRING_DAMPING = 2 * Math.sqrt(SPRING_K); // critically damped, no overshoot
 
 function lerp(a: number, b: number, t: number) {
     return a + (b - a) * t;
@@ -32,15 +45,27 @@ export default function CoverHero() {
     const wrapRef = useRef<HTMLDivElement>(null);
     const measureRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
+    const [captionVisible, setCaptionVisible] = useState(false);
     const reduced = useReducedMotion();
+    // Mouse position in canvas-local (CSS px) space, plus whether it's
+    // currently inside the section — a ref so pointer moves never re-render.
+    const pointerRef = useRef({ x: 0, y: 0, active: false });
 
     useEffect(() => {
-        // Safety fallback — guarantee caption/scroll-indicator reveal even if
-        // the particle arrival threshold is not reached cleanly. Also fires
-        // immediately when reduced-motion is active so the caption shows.
+        // Safety fallback — guarantee scroll-indicator reveal even if the
+        // particle arrival threshold is not reached cleanly. Also fires
+        // immediately when reduced-motion is active.
         const fallback = setTimeout(() => setReady(true), reduced ? 0 : 4200);
         return () => clearTimeout(fallback);
     }, [reduced]);
+
+    useEffect(() => {
+        // Name/affiliation caption shows immediately on load — recruiters
+        // should see who this is within ~1s, independent of the particle
+        // assembly spectacle above it (which still gates the scroll cue).
+        const id = requestAnimationFrame(() => setCaptionVisible(true));
+        return () => cancelAnimationFrame(id);
+    }, []);
 
     useEffect(() => {
         if (reduced) return;
@@ -49,6 +74,22 @@ export default function CoverHero() {
         if (!wrap || !canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+
+        // Pointer-as-field tracking — one listener on the section, storing
+        // into a ref (no re-renders). Touch devices are ignored entirely.
+        function handlePointerMove(e: PointerEvent) {
+            if (e.pointerType !== "mouse") return;
+            const rect = wrap!.getBoundingClientRect();
+            pointerRef.current.x = e.clientX - rect.left;
+            pointerRef.current.y = e.clientY - rect.top;
+            pointerRef.current.active = true;
+        }
+        function handlePointerLeave(e: PointerEvent) {
+            if (e.pointerType !== "mouse") return;
+            pointerRef.current.active = false;
+        }
+        wrap.addEventListener("pointermove", handlePointerMove);
+        wrap.addEventListener("pointerleave", handlePointerLeave);
 
         let rafId = 0;
         let cancelled = false;
@@ -166,6 +207,10 @@ export default function CoverHero() {
                     size: 0.7 + Math.random() * 1.0,
                     color,
                     origin,
+                    dx: 0,
+                    dy: 0,
+                    vdx: 0,
+                    vdy: 0,
                 };
             });
 
@@ -215,10 +260,51 @@ export default function CoverHero() {
                             p.y = p.ty;
                         }
                     } else {
-                        p.x =
+                        // Settled — gentle idle wiggle around the target, plus a
+                        // pointer-as-field displacement: the mouse locally
+                        // "repels" (inverse-distance) and the particle springs
+                        // back (critically damped, so it never overshoots or
+                        // scatters permanently).
+                        const baseX =
                             p.tx + Math.sin(elapsed * 0.003 + p.tx * 0.11) * 0.25;
-                        p.y =
+                        const baseY =
                             p.ty + Math.cos(elapsed * 0.0026 + p.ty * 0.11) * 0.25;
+
+                        let accX = -SPRING_K * p.dx - SPRING_DAMPING * p.vdx;
+                        let accY = -SPRING_K * p.dy - SPRING_DAMPING * p.vdy;
+
+                        if (pointerRef.current.active) {
+                            const curX = baseX + p.dx;
+                            const curY = baseY + p.dy;
+                            const fdx = curX - pointerRef.current.x;
+                            const fdy = curY - pointerRef.current.y;
+                            const dist = Math.hypot(fdx, fdy);
+                            if (dist < POINTER_FIELD_RADIUS_PX) {
+                                const safeDist = Math.max(dist, 4);
+                                const strength =
+                                    (1 - dist / POINTER_FIELD_RADIUS_PX) *
+                                    POINTER_FIELD_FORCE;
+                                accX += (fdx / safeDist) * strength;
+                                accY += (fdy / safeDist) * strength;
+                            }
+                        }
+
+                        p.vdx += accX;
+                        p.vdy += accY;
+                        p.dx += p.vdx;
+                        p.dy += p.vdy;
+
+                        const offDist = Math.hypot(p.dx, p.dy);
+                        if (offDist > MAX_DISPLACEMENT_PX) {
+                            const scale = MAX_DISPLACEMENT_PX / offDist;
+                            p.dx *= scale;
+                            p.dy *= scale;
+                            p.vdx *= 0.6;
+                            p.vdy *= 0.6;
+                        }
+
+                        p.x = baseX + p.dx;
+                        p.y = baseY + p.dy;
                     }
 
                     if (p.arrived) arrived++;
@@ -239,13 +325,18 @@ export default function CoverHero() {
                     ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx!.fill();
 
-                    if (!p.arrived && p.vx * p.vx + p.vy * p.vy > 0.4) {
+                    // Trail — reused for both the initial flight-in and any
+                    // pointer-field disturbance once settled, so motion reads
+                    // as continuous rather than two different effects.
+                    const tvx = p.arrived ? p.vdx : p.vx;
+                    const tvy = p.arrived ? p.vdy : p.vy;
+                    if (tvx * tvx + tvy * tvy > (p.arrived ? 0.12 : 0.4)) {
                         ctx!.globalCompositeOperation = "lighter";
                         ctx!.strokeStyle = `rgba(${r | 0},${g | 0},${b | 0},${alpha * 0.4})`;
                         ctx!.lineWidth = p.size * 0.85;
                         ctx!.beginPath();
                         ctx!.moveTo(p.x, p.y);
-                        ctx!.lineTo(p.x - p.vx * 4, p.y - p.vy * 4);
+                        ctx!.lineTo(p.x - tvx * 4, p.y - tvy * 4);
                         ctx!.stroke();
                     }
                 }
@@ -268,6 +359,8 @@ export default function CoverHero() {
         return () => {
             cancelled = true;
             cancelAnimationFrame(rafId);
+            wrap.removeEventListener("pointermove", handlePointerMove);
+            wrap.removeEventListener("pointerleave", handlePointerLeave);
         };
     }, [reduced]);
 
@@ -391,11 +484,13 @@ export default function CoverHero() {
                 </div>
             )}
 
-            {/* Subtle caption (fades in when title has settled) */}
+            {/* Identity caption — shows immediately on load (not gated on
+                particle settlement), so recruiters see who this is within
+                ~1s while the title assembly plays out above it. */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
-                animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                transition={{ duration: 1.2, delay: 0.3 }}
+                animate={captionVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                transition={{ duration: 0.3 }}
                 className="absolute bottom-[18%] sm:bottom-[14%] left-0 right-0 text-center space-y-2 px-4"
             >
                 <p className="font-display text-lg md:text-xl text-thz-amber/80 tracking-tight italic">
