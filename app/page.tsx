@@ -2,7 +2,9 @@ import About from "./components/About";
 import ChapterRail from "./components/ChapterRail";
 import CoverHero from "./components/CoverHero";
 import Experiences from "./components/Experiences";
+import Intro from "./components/Intro";
 import Navigation from "./components/Navigation";
+import ScrollStage from "./components/ScrollStage";
 import Skills from "./components/Skills";
 import SplitCompileHero from "./components/SplitCompileHero";
 
@@ -12,14 +14,22 @@ export default function Home() {
             <ChapterRail />
             <div className="relative z-10">
                 <Navigation />
-                <div id="cover" className="scroll-mt-24">
+                <ScrollStage id="cover" className="scroll-mt-24">
                     <CoverHero />
-                </div>
-                <div id="hero" className="scroll-mt-24">
+                </ScrollStage>
+                <ScrollStage>
+                    <Intro />
+                </ScrollStage>
+                <ScrollStage id="hero" className="scroll-mt-24">
                     <SplitCompileHero />
-                </div>
-                <About />
-                <Skills />
+                </ScrollStage>
+                <ScrollStage>
+                    <About />
+                </ScrollStage>
+                <ScrollStage>
+                    <Skills />
+                </ScrollStage>
+                {/* Experiences stage each pane individually (they're taller than the viewport). */}
                 <Experiences />
             </div>
         </main>

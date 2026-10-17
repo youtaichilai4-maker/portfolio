@@ -6,6 +6,7 @@ import { PROFILE } from "../data";
 import MagneticLink from "./MagneticLink";
 
 const navItems = [
+    { label: "Intro", href: "#intro" },
     { label: "About", href: "#about" },
     { label: "Skills", href: "#skills" },
     { label: "Experiences", href: "#experiences" },

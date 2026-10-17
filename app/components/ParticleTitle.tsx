@@ -49,8 +49,11 @@ export default function ParticleTitle({
     const wrapRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const textRef = useRef<HTMLSpanElement>(null);
-    const [started, setStarted] = useState(trigger === "mount");
+    // Each increment replays the assembly. "view" titles replay every time
+    // they come back into the viewport, not just the first time.
+    const [playCount, setPlayCount] = useState(trigger === "mount" ? 1 : 0);
     const [settled, setSettled] = useState(false);
+    const inViewRef = useRef(false);
     const reduced = useReducedMotion();
 
     // Viewport-aware font size — desktop keeps original, mobile/tablet scale down.
@@ -68,31 +71,36 @@ export default function ParticleTitle({
         return () => window.removeEventListener("resize", compute);
     }, [fontSize]);
 
-    // IntersectionObserver — kick off the animation when the title enters view.
+    // IntersectionObserver — play when the title is well inside the viewport,
+    // reset once it has fully left so the next visit plays again.
     useEffect(() => {
-        if (trigger !== "view" || started) return;
+        if (trigger !== "view") return;
         const el = wrapRef.current;
         if (!el) return;
         const io = new IntersectionObserver(
             (entries) => {
                 const e = entries[0];
-                if (e.isIntersecting) {
-                    setStarted(true);
-                    io.disconnect();
+                if (e.intersectionRatio >= 0.5 && !inViewRef.current) {
+                    inViewRef.current = true;
+                    setSettled(false);
+                    setPlayCount((c) => c + 1);
+                } else if (!e.isIntersecting && inViewRef.current) {
+                    inViewRef.current = false;
+                    setSettled(false);
                 }
             },
-            { threshold: 0.3, rootMargin: "0px 0px -10% 0px" }
+            { threshold: [0, 0.5], rootMargin: "0px 0px -12% 0px" }
         );
         io.observe(el);
         return () => io.disconnect();
-    }, [trigger, started]);
+    }, [trigger]);
 
     useEffect(() => {
         if (reduced) {
             setSettled(true);
             return;
         }
-        if (!started) return;
+        if (playCount === 0) return;
         const wrap = wrapRef.current;
         const canvas = canvasRef.current;
         const textEl = textRef.current;
@@ -111,11 +119,11 @@ export default function ParticleTitle({
             }
             if (cancelled) return;
 
-            const rect = wrap!.getBoundingClientRect();
-            const textRect = textEl!.getBoundingClientRect();
+            // Layout sizes (offset*), not getBoundingClientRect — ancestors
+            // may be mid scroll-scale transform, which would skew the sample.
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const W = Math.max(1, Math.floor(rect.width));
-            const H = Math.max(1, Math.floor(rect.height));
+            const W = Math.max(1, wrap!.offsetWidth);
+            const H = Math.max(1, wrap!.offsetHeight);
 
             canvas!.width = W * dpr;
             canvas!.height = H * dpr;
@@ -136,8 +144,8 @@ export default function ParticleTitle({
             octx.textBaseline = "top";
             octx.fillStyle = "#fff";
 
-            const drawX = textRect.left - rect.left;
-            const drawY = textRect.top - rect.top + fs * 0.08;
+            const drawX = textEl!.offsetLeft;
+            const drawY = textEl!.offsetTop + fs * 0.08;
             octx.fillText(text, drawX, drawY);
 
             const img = octx.getImageData(0, 0, offs.width, offs.height).data;
@@ -276,7 +284,7 @@ export default function ParticleTitle({
         sampleStep,
         assembleDuration,
         reduced,
-        started,
+        playCount,
     ]);
 
     // Render the semantic heading as the visible text; canvas overlays it.

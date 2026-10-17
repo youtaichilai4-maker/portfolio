@@ -1,10 +1,10 @@
 "use client";
 
 // Small "signature visual" diagrams for experiences that don't have a real
-// screenshot (THz-LTEM keeps its own waveform plot image). Shared wireframe
-// aesthetic: 1px strokes, thz-cyan/thz-amber on transparent, mono labels,
-// viewBox 200x120 — same stroke weight and label style across all three so
-// they read as one system.
+// screenshot (THz-LTEM / KK-Generation keep their own images). Shared
+// wireframe aesthetic: 1px strokes, thz-cyan/thz-amber on transparent, mono
+// labels, viewBox 200x120 — same stroke weight and label style so they read
+// as one system.
 import { motion } from "framer-motion";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 
@@ -21,7 +21,7 @@ function useDrawIn() {
     return {
         initial: { pathLength: 0 },
         whileInView: { pathLength: 1 },
-        viewport: { once: true, margin: "-40px" },
+        viewport: { once: false, margin: "-40px" },
         transition: { duration: 1.1, ease: EASE },
     };
 }
@@ -32,12 +32,13 @@ function useFadeIn(delay = 0) {
     return {
         initial: { opacity: 0 },
         whileInView: { opacity: 1 },
-        viewport: { once: true, margin: "-40px" },
+        viewport: { once: false, margin: "-40px" },
         transition: { duration: 0.7, delay, ease: EASE },
     };
 }
 
-// Pineal — a markdown source assembling into a slide frame.
+// Pineal — LLM output split into automatic checks and human review, merged
+// into one explainable report.
 export function PinealVisual() {
     const draw = useDrawIn();
     const fade = useFadeIn(0.4);
@@ -46,130 +47,89 @@ export function PinealVisual() {
             viewBox="0 0 200 120"
             className="w-full h-auto"
             role="img"
-            aria-label="markdown ファイルからスライドのレイアウトが自動で組み上がる様子を示す模式図"
+            aria-label="LLM の出力を機械検査と人手レビューに分けて評価し、説明可能なレポートにまとめる模式図"
         >
-            {/* source file */}
-            <rect x="8" y="34" width="42" height="50" rx="2" fill="none" stroke={CYAN} strokeWidth="1" opacity="0.8" />
-            <line x1="15" y1="45" x2="43" y2="45" stroke={CYAN} strokeWidth="1" opacity="0.5" />
-            <line x1="15" y1="53" x2="37" y2="53" stroke={CYAN} strokeWidth="1" opacity="0.5" />
-            <line x1="15" y1="61" x2="41" y2="61" stroke={CYAN} strokeWidth="1" opacity="0.5" />
-            <line x1="15" y1="69" x2="31" y2="69" stroke={CYAN} strokeWidth="1" opacity="0.5" />
-            <text x="29" y="98" textAnchor="middle" fontSize="7" fill={CYAN} fontFamily={MONO_FONT} opacity="0.8">
-                .md
+            <rect x="8" y="44" width="38" height="26" rx="2" fill="none" stroke={CYAN} strokeWidth="1" />
+            <text x="27" y="60" textAnchor="middle" fontSize="7" fill={CYAN} fontFamily={MONO_FONT}>
+                LLM
             </text>
 
-            {/* dashed arrow */}
-            <motion.path d="M52 58 H88" stroke={AMBER} strokeWidth="1" strokeDasharray="3 3" fill="none" {...draw} />
-            <path d="M88 58 L82 54 M88 58 L82 62" stroke={AMBER} strokeWidth="1" fill="none" />
+            <motion.path d="M46 52 L70 34 M46 62 L70 80" stroke={AMBER} strokeWidth="1" strokeDasharray="3 3" fill="none" {...draw} />
 
-            {/* slide frame */}
-            <rect x="94" y="20" width="98" height="74" rx="2" fill="none" stroke={CYAN} strokeWidth="1.2" />
-            <rect x="102" y="28" width="82" height="10" fill="none" stroke={CYAN} strokeWidth="1" opacity="0.7" />
+            <rect x="72" y="22" width="56" height="22" rx="2" fill="none" stroke={CYAN} strokeWidth="1" opacity="0.8" />
+            <text x="100" y="36" textAnchor="middle" fontSize="7" fill={CYAN} fontFamily={MONO_FONT}>
+                auto checks
+            </text>
+            <rect x="72" y="70" width="56" height="22" rx="2" fill="none" stroke={CYAN} strokeWidth="1" strokeDasharray="2 2" opacity="0.8" />
+            <text x="100" y="84" textAnchor="middle" fontSize="7" fill={CYAN} fontFamily={MONO_FONT}>
+                human review
+            </text>
+
+            <motion.path d="M128 34 L152 52 M128 80 L152 62" stroke={AMBER} strokeWidth="1" strokeDasharray="3 3" fill="none" {...draw} />
             <motion.g {...fade}>
-                <rect x="102" y="44" width="36" height="34" fill="none" stroke={CYAN} strokeWidth="1" opacity="0.6" />
-                <rect x="142" y="44" width="42" height="15" fill="none" stroke={AMBER} strokeWidth="1" opacity="0.95" />
-                <rect x="142" y="63" width="42" height="15" fill="none" stroke={CYAN} strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
+                <rect x="154" y="42" width="38" height="30" rx="2" fill="none" stroke={AMBER} strokeWidth="1.2" />
+                <text x="173" y="60" textAnchor="middle" fontSize="7" fill={AMBER} fontFamily={MONO_FONT}>
+                    report
+                </text>
             </motion.g>
 
             <text x="100" y="112" textAnchor="middle" fontSize="7" fill={MUTED} fontFamily={MONO_FONT}>
-                slide.md → render()
+                quality = auto + human
             </text>
         </svg>
     );
 }
 
-// KK-Generation — a floor-plan fragment with detection bounding boxes.
-export function KkGenerationVisual() {
+// Auth / RBA — every login passes a risk check; risky ones branch into a
+// step-up (additional) authentication before the session is issued.
+export function AuthVisual() {
     const draw = useDrawIn();
-    const fade = useFadeIn(0.35);
-    const dots: JSX.Element[] = [];
-    for (let x = 12; x <= 188; x += 22) {
-        for (let y = 12; y <= 96; y += 21) {
-            dots.push(<circle key={`${x}-${y}`} cx={x} cy={y} r="0.6" fill={MUTED} opacity="0.35" />);
-        }
-    }
+    const fade = useFadeIn(0.45);
     return (
         <svg
             viewBox="0 0 200 120"
             className="w-full h-auto"
             role="img"
-            aria-label="建築図面の壁線を検出し、梁・柱の候補領域をバウンディングボックスで示す模式図"
+            aria-label="ログインのリスクを判定し、リスクが高い場合だけ追加認証を挟んでからセッションを発行する流れの模式図"
         >
-            {dots}
-            <motion.path
-                d="M20 18 H150 V58 H180 V100 H20 Z"
-                fill="none"
-                stroke={CYAN}
-                strokeWidth="1.4"
-                {...draw}
-            />
-            <line x1="90" y1="18" x2="90" y2="58" stroke={CYAN} strokeWidth="1" opacity="0.5" />
-            <line x1="20" y1="58" x2="90" y2="58" stroke={CYAN} strokeWidth="1" opacity="0.5" />
-
-            <motion.g {...fade}>
-                <rect x="30" y="24" width="52" height="10" fill="none" stroke={AMBER} strokeDasharray="3 2" strokeWidth="1" />
-                <text x="56" y="21" textAnchor="middle" fontSize="7" fill={AMBER} fontFamily={MONO_FONT}>
-                    beam
-                </text>
-
-                <rect x="142" y="66" width="14" height="14" fill="none" stroke={AMBER} strokeDasharray="3 2" strokeWidth="1" />
-                <text x="149" y="90" textAnchor="middle" fontSize="7" fill={AMBER} fontFamily={MONO_FONT}>
-                    column
-                </text>
-
-                <rect x="96" y="72" width="40" height="10" fill="none" stroke={AMBER} strokeDasharray="3 2" strokeWidth="1" />
-                <text x="116" y="97" textAnchor="middle" fontSize="7" fill={AMBER} fontFamily={MONO_FONT}>
-                    wall
-                </text>
-            </motion.g>
-
-            <text x="100" y="112" textAnchor="middle" fontSize="7" fill={MUTED} fontFamily={MONO_FONT}>
-                detect(plan) → bbox
+            <rect x="6" y="46" width="36" height="22" rx="2" fill="none" stroke={CYAN} strokeWidth="1" />
+            <text x="24" y="60" textAnchor="middle" fontSize="7" fill={CYAN} fontFamily={MONO_FONT}>
+                login
             </text>
-        </svg>
-    );
-}
 
-// PaperLens — lines of text with a highlighted span and a translation popover.
-export function PaperLensVisual() {
-    const fade = useFadeIn(0);
-    const popover = useFadeIn(0.3);
-    const lineWidths = [118, 150, 92, 128, 68];
-    return (
-        <svg
-            viewBox="0 0 200 120"
-            className="w-full h-auto"
-            role="img"
-            aria-label="英文の一部をハイライトし、その場に翻訳を表示するポップオーバーを示す模式図"
-        >
-            {lineWidths.map((w, i) => (
-                <motion.rect
-                    key={i}
-                    x="10"
-                    y={12 + i * 13}
-                    width={w}
-                    height="6"
-                    rx="3"
-                    fill="none"
-                    stroke={CYAN}
-                    strokeWidth="1"
-                    opacity={i === 2 ? 1 : 0.45}
-                    {...(i === 2 ? {} : fade)}
-                />
-            ))}
-            {/* highlighted span inside the middle line */}
-            <rect x="44" y="38" width="42" height="6" rx="3" fill="rgba(245,165,36,0.16)" stroke={AMBER} strokeWidth="1" />
+            <motion.path d="M42 57 H64" stroke={CYAN} strokeWidth="1" fill="none" {...draw} />
+            {/* risk diamond */}
+            <path d="M82 39 L100 57 L82 75 L64 57 Z" fill="none" stroke={AMBER} strokeWidth="1.2" />
+            <text x="82" y="60" textAnchor="middle" fontSize="7" fill={AMBER} fontFamily={MONO_FONT}>
+                risk
+            </text>
 
-            <motion.g {...popover}>
-                <path d="M58 50 L66 58 L74 50" fill="none" stroke={AMBER} strokeWidth="1" />
-                <rect x="26" y="58" width="98" height="26" rx="4" fill="#0B0D10" stroke={AMBER} strokeWidth="1" />
-                <text x="75" y="74" textAnchor="middle" fontSize="7" fill="#E5E7EB" fontFamily={MONO_FONT}>
-                    速度低下の要因
+            {/* low risk: straight through */}
+            <motion.path d="M100 57 H156" stroke={CYAN} strokeWidth="1" fill="none" {...draw} />
+            <text x="128" y="53" textAnchor="middle" fontSize="6" fill={MUTED} fontFamily={MONO_FONT}>
+                low
+            </text>
+
+            {/* high risk: step-up branch */}
+            <motion.g {...fade}>
+                <path d="M82 75 V92 H112" stroke={AMBER} strokeWidth="1" strokeDasharray="3 2" fill="none" />
+                <text x="90" y="88" fontSize="6" fill={AMBER} fontFamily={MONO_FONT}>
+                    high
                 </text>
+                <rect x="112" y="82" width="44" height="20" rx="2" fill="none" stroke={AMBER} strokeWidth="1" />
+                <text x="134" y="95" textAnchor="middle" fontSize="7" fill={AMBER} fontFamily={MONO_FONT}>
+                    step-up
+                </text>
+                <path d="M156 92 H172 V68" stroke={AMBER} strokeWidth="1" strokeDasharray="3 2" fill="none" />
             </motion.g>
 
-            <text x="100" y="112" textAnchor="middle" fontSize="7" fill={MUTED} fontFamily={MONO_FONT}>
-                select → translate() → popover
+            <rect x="156" y="46" width="38" height="22" rx="2" fill="none" stroke={CYAN} strokeWidth="1.2" />
+            <text x="175" y="60" textAnchor="middle" fontSize="7" fill={CYAN} fontFamily={MONO_FONT}>
+                session
+            </text>
+
+            <text x="100" y="114" textAnchor="middle" fontSize="7" fill={MUTED} fontFamily={MONO_FONT}>
+                risk(login) → step-up auth
             </text>
         </svg>
     );

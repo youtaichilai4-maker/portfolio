@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { ReactNode, useState } from "react";
+import { MouseEvent, ReactNode, useRef, useState } from "react";
 
 // WebGL/three.js only ever runs client-side — keep it out of the SSR bundle.
 const DriftField = dynamic(() => import("./DriftField"), { ssr: false });
@@ -11,7 +10,17 @@ const DriftField = dynamic(() => import("./DriftField"), { ssr: false });
 export type CodeLine = {
     n: number;
     render: ReactNode | null;
+    /** Start line of the markdown block this line belongs to (hover-link id). */
+    block?: number;
 };
+
+// Hover link between the source pane and the rendered pane. Both sides tag
+// their elements with data-block; SplitPane toggles an .is-linked class on
+// every element sharing the hovered id via event delegation — plain DOM, no
+// React re-render per hover.
+export function blockAttrs(id: number | undefined) {
+    return id === undefined ? {} : { "data-block": id };
+}
 
 // Styled inline directive — "this file emits particles into the rendered pane"
 export function ParticleDirective({
@@ -122,60 +131,28 @@ export function EquationLayer() {
     );
 }
 
-export function CodeLines({
-    lines,
-    staggerOnMount = false,
-}: {
-    lines: CodeLine[];
-    staggerOnMount?: boolean;
-}) {
+function SourceLine({ line }: { line: CodeLine }) {
     return (
-        <div className="relative font-mono text-[11px] sm:text-[12px] md:text-[13px] leading-7 py-4 overflow-x-auto">
-            {lines.map((line, i) => {
-                const content = (
-                    <div className="flex gap-3 sm:gap-4 px-4 sm:px-6 lg:min-w-max">
-                        <span className="text-zinc-600 w-6 text-right shrink-0 select-none">
-                            {line.n}
-                        </span>
-                        <span className="whitespace-pre-wrap break-words lg:whitespace-pre min-w-0 flex-1">
-                            {line.render ?? " "}
-                        </span>
-                    </div>
-                );
+        <div
+            {...blockAttrs(line.block)}
+            className="src-line flex gap-3 sm:gap-4 px-4 sm:px-6 border-l-2 border-transparent"
+        >
+            <span className="src-line-no w-6 text-right shrink-0 select-none text-zinc-600">
+                {line.n}
+            </span>
+            <span className="whitespace-pre-wrap break-words min-w-0 flex-1">
+                {line.render ?? " "}
+            </span>
+        </div>
+    );
+}
 
-                if (staggerOnMount) {
-                    return (
-                        <motion.div
-                            key={line.n}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{
-                                duration: 0.35,
-                                delay: 0.05 * i,
-                                ease: [0.22, 1, 0.36, 1],
-                            }}
-                        >
-                            {content}
-                        </motion.div>
-                    );
-                }
-
-                return (
-                    <motion.div
-                        key={line.n}
-                        initial={{ opacity: 0, x: -8 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true, margin: "-50px" }}
-                        transition={{
-                            duration: 0.35,
-                            delay: 0.04 * i,
-                            ease: [0.22, 1, 0.36, 1],
-                        }}
-                    >
-                        {content}
-                    </motion.div>
-                );
-            })}
+export function CodeLines({ lines }: { lines: CodeLine[] }) {
+    return (
+        <div className="relative font-mono text-[11px] sm:text-[12px] md:text-[13px] leading-7 py-4">
+            {lines.map((line) => (
+                <SourceLine key={line.n} line={line} />
+            ))}
         </div>
     );
 }
@@ -210,7 +187,6 @@ export function BrowserChrome({
 export default function SplitPane({
     filename,
     codeLines,
-    staggerOnMount = false,
     rendered,
     minHeight = "640px",
     rightChildren,
@@ -219,7 +195,6 @@ export default function SplitPane({
 }: {
     filename: string;
     codeLines: CodeLine[];
-    staggerOnMount?: boolean;
     rendered: ReactNode;
     minHeight?: string;
     rightChildren?: ReactNode;
@@ -227,9 +202,34 @@ export default function SplitPane({
     particleDensity?: number;
 }) {
     const [mobileTab, setMobileTab] = useState<"preview" | "source">("preview");
+    const rootRef = useRef<HTMLDivElement>(null);
+    const activeRef = useRef<string | null>(null);
+
+    const setLinked = (id: string | null) => {
+        if (id === activeRef.current) return;
+        const root = rootRef.current;
+        if (!root) return;
+        root.querySelectorAll(".is-linked").forEach((el) =>
+            el.classList.remove("is-linked")
+        );
+        if (id !== null) {
+            root.querySelectorAll(`[data-block="${id}"]`).forEach((el) =>
+                el.classList.add("is-linked")
+            );
+        }
+        activeRef.current = id;
+    };
+    const onPointerOver = (e: MouseEvent<HTMLDivElement>) => {
+        const hit = (e.target as HTMLElement).closest("[data-block]");
+        setLinked(hit?.getAttribute("data-block") ?? null);
+    };
 
     return (
-        <div>
+        <div
+            ref={rootRef}
+            onMouseOver={onPointerOver}
+            onMouseLeave={() => setLinked(null)}
+        >
             {/* Mobile/tablet tabs — preview is default, source shows the code
                 pane. Hidden at lg+, where the side-by-side grid is unchanged. */}
             <div
@@ -286,7 +286,15 @@ export default function SplitPane({
                             {filename}
                         </span>
                     </div>
-                    <CodeLines lines={codeLines} staggerOnMount={staggerOnMount} />
+                    {/* At lg the source is clipped to the rendered pane's
+                        height (no inner scroll) and fades out at the bottom. */}
+                    <div className="lg:absolute lg:inset-x-0 lg:top-10 lg:bottom-0 lg:overflow-hidden">
+                        <CodeLines lines={codeLines} />
+                        <div
+                            aria-hidden
+                            className="hidden lg:block absolute inset-x-0 bottom-0 h-24 pointer-events-none bg-gradient-to-t from-[#0B0D10] to-transparent"
+                        />
+                    </div>
                 </div>
 
                 {/* RIGHT — rendered view */}

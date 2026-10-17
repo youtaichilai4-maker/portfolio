@@ -161,3 +161,21 @@
         }
     }
 }
+/* Source ↔ rendered hover link (toggled by SplitPane, no React state). */
+.src-line,
+.linkable {
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.src-line.is-linked {
+    border-color: #7fe3ff;
+    background-color: rgba(127, 227, 255, 0.06);
+}
+.src-line.is-linked .src-line-no {
+    color: #7fe3ff;
+}
+.linkable.is-linked {
+    background-color: rgba(127, 227, 255, 0.05);
+    box-shadow:
+        0 0 0 1px rgba(127, 227, 255, 0.35),
+        0 0 24px rgba(127, 227, 255, 0.12);
+}
