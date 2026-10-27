@@ -240,16 +240,16 @@ C++ で書かれたオープンソースの Monte Carlo 半導体シミュレー
         signature: "quality = auto_checks + human_review",
         desc:
             "採用面接AIシステムの開発で、LLM が生成する評価・帳票の品質を「感覚」ではなく説明可能にする評価基盤を設計しました。",
-        tech: ["Python", "LLM評価", "Langfuse", "Vertex AI"],
+        tech: ["Python", "LLM評価", "Vertex AI"],
         achievements: [
-            "PII 制約を起点に、self-host OSS + 自前層の二層評価基盤を設計し ADR 化",
+            "PII 制約を起点に評価基盤を設計し ADR 化",
             "機械検査と人手レビューの分担を整理し、品質を説明可能な形に",
         ],
         details: `### The Problem
 プロンプトを改善しても、その品質を「良くなりました」と感覚で伝えるしかない状態でした。何をもって合格とするかを顧客と握れる、説明可能な評価の仕組みが必要でした。
 
 ### Architecture
-候補者情報（PII）を外部 SaaS に送れないという制約を起点に、トレース・プロンプト管理・人手レビューは self-host の OSS（Langfuse）、帳票プレビューや顧客向けレポートは自前層、という二層構成を提案し、ADR として文書化しました。`,
+候補者情報（PII）を外部 SaaS に送れないという制約を起点に、機械検査と人手レビューの分担を整理した評価の仕組みを提案し、ADR として文書化しました。`,
         visual: "pineal",
     },
 ];
